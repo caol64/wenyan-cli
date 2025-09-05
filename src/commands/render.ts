@@ -21,8 +21,12 @@ export async function renderCommand(inputContent: string | undefined, options: R
         console.log(gzhContent.content);
         // process.exit(0);
     } catch (error) {
-        console.error("An unexpected error occurred during rendering:");
-        console.error(error);
+        if (error instanceof Error) {
+            console.error("An unexpected error occurred during publishing:");
+            console.error(error.message);
+        } else {
+            console.error("An unexpected error occurred:", error);
+        }
         process.exit(1);
     }
 }

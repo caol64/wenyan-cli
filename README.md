@@ -26,6 +26,8 @@
 npm install -g @wenyan-md/cli
 ```
 
+---
+
 ## 基本用法
 
 主命令为：
@@ -34,7 +36,45 @@ npm install -g @wenyan-md/cli
 wenyan <command> [options]
 ```
 
-### 子命令
+---
+
+## 环境变量
+
+某些功能（如发布到微信公众号）需要配置以下环境变量：
+
+* `WECHAT_APP_ID`
+* `WECHAT_APP_SECRET`
+
+### macOS / Linux
+
+可在命令前临时设置：
+
+```bash
+WECHAT_APP_ID=xxx WECHAT_APP_SECRET=yyy wenyan publish "your markdown"
+```
+
+或在 `~/.bashrc` / `~/.zshrc` 中永久添加：
+
+```bash
+export WECHAT_APP_ID=xxx
+export WECHAT_APP_SECRET=yyy
+```
+
+### Windows (PowerShell)
+
+临时设置：
+
+```powershell
+$env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your markdown"
+```
+
+永久设置（在环境变量里添加）：
+
+控制面板 → 系统和安全 → 系统 → 高级系统设置 → 环境变量 → 添加 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET`。
+
+---
+
+## 子命令
 
 `publish`
 
@@ -50,7 +90,9 @@ wenyan <command> [options]
 - `-h`，代码高亮主题，默认`solarized-light`
 - `-m`，使用 Mac 风格的代码块，默认启用，如要关闭：`--no-mac-style`
 
-### 示例
+---
+
+## 示例
 
 直接传入内容：
 
