@@ -87,8 +87,25 @@ $env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your mar
 ### 选项
 
 - `-t`，主题id，默认`default`
+  - default
+  - orangeheart
+  - rainbow
+  - lapis
+  - pie
+  - maize
+  - purple
+  - phycat
 - `-h`，代码高亮主题，默认`solarized-light`
-- `-m`，使用 Mac 风格的代码块，默认启用，如要关闭：`--no-mac-style`
+  - atom-one-dark
+  - atom-one-light
+  - dracula
+  - github-dark
+  - github
+  - monokai
+  - solarized-dark
+  - solarized-light
+  - xcode
+- 代码块默认使用 Mac 风格，如要关闭：`--no-mac-style`
 
 ---
 
