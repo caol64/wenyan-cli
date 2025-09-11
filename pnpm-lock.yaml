@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@wenyan-md/core':
-        specifier: ^1.0.6
+        specifier: ^1.0.2
         version: 1.0.6
       commander:
         specifier: ^14.0.0
