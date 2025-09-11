@@ -8,12 +8,13 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "composite": true,
     "baseUrl": ".",
     "outDir": "dist",
     "rootDir": "src",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "declarationDir": "dist/types",
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "bin/**/*.js"]

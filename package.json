@@ -1,26 +1,42 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
-  "keywords": ["公众号", "markdown", "文颜", "wenyan", "wechat", "publishing", "renderer"],
+  "keywords": [
+    "公众号",
+    "markdown",
+    "文颜",
+    "wenyan",
+    "wechat",
+    "publishing",
+    "renderer"
+  ],
   "type": "module",
   "bin": {
     "wenyan": "./bin/cli.js"
   },
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "files": [
     "dist",
     "bin"
   ],
+  "homepage": "https://github.com/caol64/wenyan-cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caol64/wenyan-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/caol64/wenyan-cli/issues"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "prepublishOnly": "pnpm build",
-    "testRender": "cat test/publish.md | pnpm wenyan render",
-    "testPublish": "cat test/publish.md | pnpm dotenv -e .env.test -- wenyan publish -t lapis"
+    "test:render": "cat test/publish.md | pnpm wenyan render",
+    "test:publish": "cat test/publish.md | pnpm dotenv -e .env.test -- wenyan publish -t lapis"
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
