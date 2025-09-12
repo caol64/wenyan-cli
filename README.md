@@ -116,6 +116,7 @@ $env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your mar
   - solarized-light
   - xcode
 - 代码块默认使用 Mac 风格，如要关闭：`--no-mac-style`
+- 链接默认转脚注，如要关闭：`--no-footnote`
 
 ## 示例
 

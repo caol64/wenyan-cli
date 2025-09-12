@@ -21,7 +21,10 @@ program
     .argument("[input-content]", "content of the input markdown file")
     .option("-t, --theme <theme-id>", "ID of the theme to use", "default")
     .option("-h, --highlight <highlight-theme-id>", "ID of the code highlight theme to use", "solarized-light")
-    .option("-m, --mac-style", "display codeblock with mac style", true)
+    .option("--mac-style", "display codeblock with mac style", true)
+    .option("--no-mac-style", "disable mac style")
+    .option("--footnote", "convert link to footnote", true)
+    .option("--no-footnote", "disable footnote")
     .action(publishCommand);
 
 program
@@ -30,7 +33,10 @@ program
     .argument("[input-content]", "content of the input markdown file")
     .option("-t, --theme <theme-id>", "ID of the theme to use", "default")
     .option("-h, --highlight <highlight-theme-id>", "ID of the code highlight theme to use", "solarized-light")
-    .option("-m, --mac-style", "display codeblock with mac style", true)
+    .option("--mac-style", "display codeblock with mac style", true)
+    .option("--no-mac-style", "disable mac style")
+    .option("--footnote", "convert link to footnote", true)
+    .option("--no-footnote", "disable footnote")
     .action(renderCommand);
 
 program.parse();

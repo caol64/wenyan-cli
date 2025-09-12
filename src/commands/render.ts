@@ -17,7 +17,7 @@ export async function renderCommand(inputContent: string | undefined, options: R
             }
             inputContent = await readStdin();
         }
-        const gzhContent = await getGzhContent(inputContent, options["theme"], options["highlight"], options["macStyle"]);
+        const gzhContent = await getGzhContent(inputContent, options["theme"], options["highlight"], options["macStyle"], options["footnote"]);
         console.log(gzhContent.content);
         // process.exit(0);
     } catch (error) {

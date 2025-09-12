@@ -30,18 +30,3 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm publish --access public --no-git-checks
-
-      - name: Create Release Zip
-        run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          ZIP_NAME="wenyan_cli_${PKG_VERSION}.zip"
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
-          zip -r "$ZIP_NAME" package.json README.md LICENSE dist bin
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ env.ZIP_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

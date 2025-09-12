@@ -18,7 +18,7 @@ export async function publishCommand(inputContent: string, options: RenderOption
             }
             inputContent = await readStdin();
         }
-        const gzhContent = await getGzhContent(inputContent, options["theme"], options["highlight"], options["macStyle"]);
+        const gzhContent = await getGzhContent(inputContent, options["theme"], options["highlight"], options["macStyle"], options["footnote"]);
         if (!gzhContent.title) {
             console.error("未能找到文章标题");
             process.exit(1);

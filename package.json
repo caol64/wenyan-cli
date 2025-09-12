@@ -1,6 +1,6 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
@@ -35,12 +35,12 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "prepublishOnly": "pnpm build",
-    "test:render": "cat test/publish.md | pnpm wenyan render",
-    "test:publish": "cat test/publish.md | pnpm dotenv -e .env.test -- wenyan publish -t lapis"
+    "test:render": "pnpm build && cat test/publish.md | node ./bin/cli.js render",
+    "test:publish": "pnpm build && cat test/publish.md | pnpm dotenv -e .env.test -- node ./bin/cli.js publish -t lapis"
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
-    "@wenyan-md/core": "^1.0.2",
+    "@wenyan-md/core": "^1.0.8",
     "commander": "^14.0.0"
   },
   "devDependencies": {
