@@ -1,6 +1,6 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
@@ -40,7 +40,7 @@
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
-    "@wenyan-md/core": "^1.0.8",
+    "@wenyan-md/core": "^1.0.9",
     "commander": "^14.0.0"
   },
   "devDependencies": {

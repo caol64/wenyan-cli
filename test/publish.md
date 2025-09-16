@@ -12,11 +12,27 @@ cover: test/wenyan.jpg
 
 ![](test/result_image.jpg)
 
-```
-# .npmignore
+```javascript
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
+import hljs from 'highlight.js';
 
-# 忽略所有 dist 目录下的 .map 文件
-dist/**/*.map
+// or UMD script
+// <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+// <script src="https://cdn.jsdelivr.net/npm/marked-highlight/lib/index.umd.js"></script>
+// const { Marked } = globalThis.marked;
+// const { markedHighlight } = globalThis.markedHighlight;
+const marked = new Marked(
+  markedHighlight({
+    emptyLangClass: 'hljs',
+    langPrefix: 'hljs language-',
+    highlight(code, lang, info) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    }
+  })
+);
+
 ```
 
 ## 2.12 公式
