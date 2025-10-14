@@ -4,7 +4,7 @@
 
 # 文颜 CLI
 
-[![npm](https://img.shields.io/npm/v/@wenyan-md/cli)](https://www.npmjs.com/package/@wenyan-md/cli)
+[![npm](https://img.shields.io/npm/v/@wenyan-md/cli?logo=npm)](https://www.npmjs.com/package/@wenyan-md/cli)
 [![License](https://img.shields.io/github/license/caol64/wenyan-cli)](LICENSE)
 ![NPM Downloads](https://img.shields.io/npm/dm/%40wenyan-md%2Fcli)
 [![Stars](https://img.shields.io/github/stars/caol64/wenyan-cli?style=social)](https://github.com/caol64/wenyan-cli)
