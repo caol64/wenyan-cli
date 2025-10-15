@@ -4,7 +4,7 @@
 
 # 文颜 CLI
 
-[![npm](https://img.shields.io/npm/v/@wenyan-md/cli?logo=npm)](https://www.npmjs.com/package/@wenyan-md/cli)
+[![npm](https://img.shields.io/npm/v/@wenyan-md/cli)](https://www.npmjs.com/package/@wenyan-md/cli)
 [![License](https://img.shields.io/github/license/caol64/wenyan-cli)](LICENSE)
 ![NPM Downloads](https://img.shields.io/npm/dm/%40wenyan-md%2Fcli)
 [![Stars](https://img.shields.io/github/stars/caol64/wenyan-cli?style=social)](https://github.com/caol64/wenyan-cli)
@@ -14,9 +14,10 @@
 **文颜**现已推出多个版本：
 
 * [macOS App Store 版](https://github.com/caol64/wenyan) - MAC 桌面应用
-* [Windows + Linux 版](https://github.com/caol64/wenyan-pc) - 跨平台桌面应用
+* [跨平台版本](https://github.com/caol64/wenyan-pc) - Windows/Linux 跨平台桌面应用
 * [CLI 版本](https://github.com/caol64/wenyan-cli) - CI/CD 或脚本自动化发布公众号文章
 * [MCP 版本](https://github.com/caol64/wenyan-mcp) - 让 AI 自动发布公众号文章
+* [嵌入版本](https://github.com/caol64/wenyan-core) - 将文颜的核心功能嵌入 Node 或者 Web 项目
 
 本项目是 **文颜的 CLI 版本**。
 
