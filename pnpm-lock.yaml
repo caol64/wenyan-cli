@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@wenyan-md/core':
-        specifier: ^1.0.12
-        version: 1.0.12
+        specifier: ^1.0.14
+        version: 1.0.14
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -220,8 +220,8 @@ packages:
   '@types/node@24.3.1':
     resolution: {integrity: sha512-3vXmQDXy+woz+gnrTvuvNrPzekOi+Ds0ReMxw0LzBiK3a+1k0kQn9f2NWk+lgD4rJehFUmYy2gMhJ2ZI+7YP9g==}
 
-  '@wenyan-md/core@1.0.12':
-    resolution: {integrity: sha512-0MAZxgBVhY97e6ZndLChlb5xno7sw6t7Dv2UXKCSlddpZsCdmlP3DHnh4MP8rqN8SbLDRW6OeotRWc+MibhyXg==}
+  '@wenyan-md/core@1.0.14':
+    resolution: {integrity: sha512-rBIrI82noyciaCukd788Tm4U543m3bSLDD/GgU4w5ibdoMe8zNv1fp9/WnTchQudh8lwy4X8uBN/mqtf213faw==}
 
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
@@ -303,6 +303,10 @@ packages:
     resolution: {integrity: sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==}
     engines: {node: '>=4'}
     hasBin: true
+
+  form-data-encoder@4.1.0:
+    resolution: {integrity: sha512-G6NsmEW15s0Uw9XnCg+33H3ViYRyiM0hMrMhhqQOR8NFc5GhYrI+6I3u7OTw7b91J2g8rtvMBZJDbcGb2YUniw==}
+    engines: {node: '>= 18'}
 
   formdata-node@6.0.3:
     resolution: {integrity: sha512-8e1++BCiTzUno9v5IZ2J6bv4RU+3UKDmqWUQD0MIMVCd9AdhWkO1gw57oo1mNEX1dMq2EGI+FbWz4B92pscSQg==}
@@ -477,6 +481,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -625,9 +630,10 @@ snapshots:
     dependencies:
       undici-types: 7.10.0
 
-  '@wenyan-md/core@1.0.12':
+  '@wenyan-md/core@1.0.14':
     dependencies:
       css-tree: 3.0.1
+      form-data-encoder: 4.1.0
       formdata-node: 6.0.3
       front-matter: 4.0.2
       highlight.js: 11.10.0
@@ -729,6 +735,8 @@ snapshots:
   esm@3.2.25: {}
 
   esprima@4.0.1: {}
+
+  form-data-encoder@4.1.0: {}
 
   formdata-node@6.0.3: {}
 
