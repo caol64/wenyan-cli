@@ -7,6 +7,7 @@
 [![npm](https://img.shields.io/npm/v/@wenyan-md/cli)](https://www.npmjs.com/package/@wenyan-md/cli)
 [![License](https://img.shields.io/github/license/caol64/wenyan-cli)](LICENSE)
 ![NPM Downloads](https://img.shields.io/npm/dm/%40wenyan-md%2Fcli)
+[![Docker Pulls](https://img.shields.io/docker/pulls/caol64/wenyan-cli)](https://hub.docker.com/r/caol64/wenyan-cli)
 [![Stars](https://img.shields.io/github/stars/caol64/wenyan-cli?style=social)](https://github.com/caol64/wenyan-cli)
 
 ## 简介
