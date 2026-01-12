@@ -9,69 +9,129 @@
 ![NPM Downloads](https://img.shields.io/npm/dm/%40wenyan-md%2Fcli)
 [![Stars](https://img.shields.io/github/stars/caol64/wenyan-cli?style=social)](https://github.com/caol64/wenyan-cli)
 
-「文颜」是一款多平台排版美化工具，让你将 Markdown 一键发布至微信公众号、知乎、今日头条等主流写作平台。
+## 简介
 
-**文颜**现已推出多个版本：
+**文颜（Wenyan）** 是一款多平台 Markdown 排版与发布工具，支持将 Markdown 一键转换并发布至：
 
-* [macOS App Store 版](https://github.com/caol64/wenyan) - MAC 桌面应用
-* [跨平台版本](https://github.com/caol64/wenyan-pc) - Windows/Linux 跨平台桌面应用
-* [CLI 版本](https://github.com/caol64/wenyan-cli) - CI/CD 或脚本自动化发布公众号文章
-* [MCP 版本](https://github.com/caol64/wenyan-mcp) - 让 AI 自动发布公众号文章
-* [嵌入版本](https://github.com/caol64/wenyan-core) - 将文颜的核心功能嵌入 Node 或者 Web 项目
+-   微信公众号
+-   知乎
+-   今日头条
+-   以及其它内容平台（持续扩展中）
 
-本项目是 **文颜的 CLI 版本**。
+文颜的目标是：**让写作者专注内容，而不是排版和平台适配**。
 
-## 功能
+本仓库是 **文颜的 CLI 版本**，适合以下场景：
 
-* 使用内置主题对 Markdown 内容排版
-* 支持图片自动上传
-* 支持数学公式渲染
-* 一键发布文章到微信公众号草稿箱
+-   命令行使用
+-   CI / CD 自动化发布
+-   脚本或工具链集成
+-   与 AI / MCP 系统联动自动发文
 
-## 主题效果
+## 文颜的不同版本
+
+文颜目前提供多种形态，覆盖不同使用场景：
+
+-   [macOS App Store 版](https://github.com/caol64/wenyan) - MAC 桌面应用
+-   [跨平台桌面版](https://github.com/caol64/wenyan-pc) - Windows/Linux
+-   👉 [CLI 版本](https://github.com/caol64/wenyan-cli) - 本项目
+-   [MCP 版本](https://github.com/caol64/wenyan-mcp) - AI 自动发文
+-   [核心库](https://github.com/caol64/wenyan-core) - 嵌入 Node / Web 项目
+
+## 功能特性
+
+-   使用内置主题对 Markdown 内容排版
+-   自动处理并上传图片（本地 / 网络）
+-   支持数学公式（MathJax）
+-   一键发布文章到微信公众号草稿箱
+-   支持 CI / 自动化流程调用
+
+## 主题效果预览
 
 👉 [内置主题预览](https://yuzhi.tech/docs/wenyan/theme)
 
-文颜采用了多个开源的 Typora 主题，在此向各位作者表示感谢：
+文颜内置并适配了多个优秀的 Typora 主题，在此感谢原作者：
 
-- [Orange Heart](https://github.com/evgo2017/typora-theme-orange-heart)
-- [Rainbow](https://github.com/thezbm/typora-theme-rainbow)
-- [Lapis](https://github.com/YiNNx/typora-theme-lapis)
-- [Pie](https://github.com/kevinzhao2233/typora-theme-pie)
-- [Maize](https://github.com/BEATREE/typora-maize-theme)
-- [Purple](https://github.com/hliu202/typora-purple-theme)
-- [物理猫-薄荷](https://github.com/sumruler/typora-theme-phycat)
+-   [Orange Heart](https://github.com/evgo2017/typora-theme-orange-heart)
+-   [Rainbow](https://github.com/thezbm/typora-theme-rainbow)
+-   [Lapis](https://github.com/YiNNx/typora-theme-lapis)
+-   [Pie](https://github.com/kevinzhao2233/typora-theme-pie)
+-   [Maize](https://github.com/BEATREE/typora-maize-theme)
+-   [Purple](https://github.com/hliu202/typora-purple-theme)
+-   [物理猫-薄荷](https://github.com/sumruler/typora-theme-phycat)
 
-## 安装
+## 安装方式
 
-```
+### 方式一：npm（推荐）
+
+```bash
 npm install -g @wenyan-md/cli
 ```
 
+安装完成后即可使用：
+
+```bash
+wenyan --help
+```
+
+### 方式二：Docker（无需 Node 环境）
+
+如果你不想在本地安装 Node.js，也可以直接使用 Docker。
+
+**拉取镜像**
+
+```bash
+docker pull caol64/wenyan-cli
+```
+
+**查看帮助**
+
+```bash
+docker run --rm caol64/wenyan-cli
+```
+
+**发布文章示例**
+
+```bash
+docker run --rm \
+  --env-file .env.test \
+  -e HOST_FILE_PATH=$(pwd) \
+  -v $(pwd):/mnt/host-downloads \
+  caol64/wenyan-cli \
+  publish -f ./test/publish.md -t phycat
+```
+
+> 说明：
+>
+> -   使用 `-e` 传入环境变量
+> -   使用 `-v` 挂载本地 Markdown 文件
+> -   容器启动即执行 `wenyan` 命令
+
 ## 基本用法
 
-主命令为：
+CLI 主命令：
 
 ```bash
 wenyan <command> [options]
 ```
 
-## 环境变量
+目前最常用的子命令是 `publish`。
 
-某些功能（如发布到微信公众号）需要配置以下环境变量：
+## 环境变量配置
 
-* `WECHAT_APP_ID`
-* `WECHAT_APP_SECRET`
+部分功能（如发布微信公众号）需要配置以下环境变量：
+
+-   `WECHAT_APP_ID`
+-   `WECHAT_APP_SECRET`
 
 ### macOS / Linux
 
-可在命令前临时设置：
+临时使用：
 
 ```bash
 WECHAT_APP_ID=xxx WECHAT_APP_SECRET=yyy wenyan publish "your markdown"
 ```
 
-或在 `~/.bashrc` / `~/.zshrc` 中永久添加：
+永久配置（推荐）：
 
 ```bash
 export WECHAT_APP_ID=xxx
@@ -80,10 +140,12 @@ export WECHAT_APP_SECRET=yyy
 
 ### Windows (PowerShell)
 
-临时设置：
+临时使用：
 
 ```powershell
-$env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your markdown"
+$env:WECHAT_APP_ID="xxx"
+$env:WECHAT_APP_SECRET="yyy"
+wenyan publish example.md
 ```
 
 永久设置（在环境变量里添加）：
@@ -94,37 +156,28 @@ $env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your mar
 
 `publish`
 
-将 Markdown 转换为适配微信公众号的富文本 HTML 并上传到公众号。
+将 Markdown 转换为适配微信公众号的富文本 HTML，并上传到草稿箱。
 
 ### 参数
 
-- `<input-content>`，要转换的 Markdown 内容。可直接作为参数传入，或通过管道/重定向从 `stdin` 读取
+-   `<input-content>`
 
-### 选项
+    Markdown 内容，可以：
 
-- `-t`，主题id，默认`default`
-  - default
-  - orangeheart
-  - rainbow
-  - lapis
-  - pie
-  - maize
-  - purple
-  - phycat
-- `-h`，代码高亮主题，默认`solarized-light`
-  - atom-one-dark
-  - atom-one-light
-  - dracula
-  - github-dark
-  - github
-  - monokai
-  - solarized-dark
-  - solarized-light
-  - xcode
-- 代码块默认使用 Mac 风格，如要关闭：`--no-mac-style`
-- 链接默认转脚注，如要关闭：`--no-footnote`
+    -   直接作为参数传入
+    -   通过 stdin 管道输入
 
-## 示例
+### 常用选项
+
+-   `-t`：主题（默认 `default`）
+    -   default / orangeheart / rainbow / lapis / pie / maize / purple / phycat
+-   `-h`：代码高亮主题（默认 `solarized-light`）
+    -   atom-one-dark / atom-one-light / dracula / github-dark / github / monokai / solarized-dark / solarized-light / xcode
+-   `--no-mac-style`：关闭代码块 Mac 风格
+-   `--no-footnote`：关闭链接转脚注
+-   `-f`：指定本地 Markdown 文件路径
+
+## 使用示例
 
 直接传入内容：
 
@@ -132,40 +185,50 @@ $env:WECHAT_APP_ID="xxx"; $env:WECHAT_APP_SECRET="yyy"; wenyan publish "your mar
 wenyan publish "# Hello, Wenyan" -t lapis -h solarized-light
 ```
 
-从文件读取：
+从管道读取：
 
 ```bash
 cat example.md | wenyan publish -t lapis -h solarized-light --no-mac-style
 ```
 
-## 微信公众号 IP 白名单
+从文件读取：
 
-请务必将服务器 IP 加入公众号平台的 IP 白名单，以确保上传接口调用成功。
-详细配置说明请参考：[https://yuzhi.tech/docs/wenyan/upload](https://yuzhi.tech/docs/wenyan/upload)
+```bash
+wenyan publish -f "./example.md" -t lapis -h solarized-light --no-mac-style
+```
 
-## 配置说明（Frontmatter）
+## Markdown Frontmatter 说明（必读）
 
-为了可以正确上传文章，需要在每一篇 Markdown 文章的开头添加一段`frontmatter`，提供`title`、`cover`两个字段：
+为了正确上传文章，每篇 Markdown 顶部需要包含 frontmatter：
 
 ```md
 ---
 title: 在本地跑一个大语言模型(2) - 给模型提供外部知识库
-cover: /Users/lei/Downloads/result_image.jpg
+cover: /Users/xxx/image.jpg
 ---
 ```
 
-* `title` 是文章标题，必填。
-* `cover` 是文章封面，支持本地路径和网络图片：
+字段说明：
 
-  * 如果正文有至少一张图片，可省略，此时将使用其中一张作为封面；
-  * 如果正文无图片，则必须提供 cover。
+-   `title` 文章标题（必填）
+-   `cover` 文章封面
+    -   本地路径或网络图片
+    -   如果正文中已有图片，可省略
 
 ## 关于图片自动上传
 
-* 支持图片路径：
+支持以下图片来源：
 
-  * 本地路径（如：`/Users/lei/Downloads/result_image.jpg`）
-  * 网络路径（如：`https://example.com/image.jpg`）
+-   本地路径（如：`/Users/xxx/image.jpg`）
+-   网络路径（如：`https://example.com/image.jpg`）
+
+## 微信公众号 IP 白名单
+
+> ⚠️ 重要
+>
+> 请确保运行文颜的机器 IP 已加入微信公众号后台的 IP 白名单，否则上传接口将调用失败。
+
+配置说明文档：[https://yuzhi.tech/docs/wenyan/upload](https://yuzhi.tech/docs/wenyan/upload)
 
 ## 示例文章格式
 
@@ -186,7 +249,9 @@ cover: /Users/lei/Downloads/result_image.jpg
 
 ## 赞助
 
-如果您觉得不错，可以给我家猫咪买点罐头吃。[喂猫❤️](https://yuzhi.tech/sponsor)
+如果你觉得文颜对你有帮助，可以给我家猫咪买点罐头 ❤️
+
+[https://yuzhi.tech/sponsor](https://yuzhi.tech/sponsor)
 
 ## License
 

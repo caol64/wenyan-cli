@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@wenyan-md/core':
-        specifier: ^1.0.14
-        version: 1.0.14
+        specifier: ^1.0.17
+        version: 1.0.17
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -220,8 +220,8 @@ packages:
   '@types/node@24.3.1':
     resolution: {integrity: sha512-3vXmQDXy+woz+gnrTvuvNrPzekOi+Ds0ReMxw0LzBiK3a+1k0kQn9f2NWk+lgD4rJehFUmYy2gMhJ2ZI+7YP9g==}
 
-  '@wenyan-md/core@1.0.14':
-    resolution: {integrity: sha512-rBIrI82noyciaCukd788Tm4U543m3bSLDD/GgU4w5ibdoMe8zNv1fp9/WnTchQudh8lwy4X8uBN/mqtf213faw==}
+  '@wenyan-md/core@1.0.17':
+    resolution: {integrity: sha512-fUqK/Qa8No/sB9RqqoWw3Xvt0G6WwEVCiVXMTkRHYh7YK9RkJtFsV0klWFd6GCXofiSWwvVf+8/LI3Ve7MQgGw==}
 
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
@@ -630,7 +630,7 @@ snapshots:
     dependencies:
       undici-types: 7.10.0
 
-  '@wenyan-md/core@1.0.14':
+  '@wenyan-md/core@1.0.17':
     dependencies:
       css-tree: 3.0.1
       form-data-encoder: 4.1.0

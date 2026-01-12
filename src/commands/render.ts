@@ -1,23 +1,40 @@
 import { getGzhContent } from "@wenyan-md/core/wrapper";
-import { readStdin } from "../utils.js"
+import { getNormalizeFilePath, readStdin } from "../utils.js";
+import fs from "node:fs/promises";
 
 interface RenderOptions {
-    output?: string;
+    file?: string;
     theme: string;
     highlight: string;
     macStyle: boolean;
+    footnote: boolean;
 }
 
 export async function renderCommand(inputContent: string | undefined, options: RenderOptions) {
     try {
+        const { file } = options;
         if (!inputContent) {
-            if (process.stdin.isTTY) {
-                console.error("Error: missing input-content (no argument and no stdin).");
-                process.exit(1);
+            if (!process.stdin.isTTY) {
+                inputContent = await readStdin();
             }
-            inputContent = await readStdin();
         }
-        const gzhContent = await getGzhContent(inputContent, options["theme"], options["highlight"], options["macStyle"], options["footnote"]);
+
+        if (!inputContent && file) {
+            const normalizePath = getNormalizeFilePath(file);
+            inputContent = await fs.readFile(normalizePath, "utf-8");
+        }
+
+        if (!inputContent) {
+            console.error("Error: missing input-content (no argument, no stdin, and no file).");
+            process.exit(1);
+        }
+        const gzhContent = await getGzhContent(
+            inputContent,
+            options["theme"],
+            options["highlight"],
+            options["macStyle"],
+            options["footnote"]
+        );
         console.log(gzhContent.content);
         // process.exit(0);
     } catch (error) {

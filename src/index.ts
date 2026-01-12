@@ -18,7 +18,8 @@ program
 program
     .command("publish")
     .description("Render a markdown file to styled HTML and publish to wechat GZH")
-    .argument("[input-content]", "content of the input markdown file")
+    .argument("[input-content]", "markdown content (string input)")
+    .option("-f, --file <path>", "read markdown content from local file")
     .option("-t, --theme <theme-id>", "ID of the theme to use", "default")
     .option("-h, --highlight <highlight-theme-id>", "ID of the code highlight theme to use", "solarized-light")
     .option("--mac-style", "display codeblock with mac style", true)
@@ -30,7 +31,8 @@ program
 program
     .command("render")
     .description("Render a markdown file to styled HTML")
-    .argument("[input-content]", "content of the input markdown file")
+    .argument("[input-content]", "markdown content (string input)")
+    .option("-f, --file <path>", "read markdown content from local file")
     .option("-t, --theme <theme-id>", "ID of the theme to use", "default")
     .option("-h, --highlight <highlight-theme-id>", "ID of the code highlight theme to use", "solarized-light")
     .option("--mac-style", "display codeblock with mac style", true)
