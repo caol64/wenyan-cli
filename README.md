@@ -12,7 +12,7 @@
 
 ## 简介
 
-**文颜（Wenyan）** 是一款多平台 Markdown 排版与发布工具，支持将 Markdown 一键转换并发布至：
+**[文颜（Wenyan）](https://wenyan.yuzhi.tech/)** 是一款多平台 Markdown 排版与发布工具，支持将 Markdown 一键转换并发布至：
 
 -   微信公众号
 -   知乎

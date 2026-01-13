@@ -75,11 +75,11 @@ All file paths in Markdown (cover / images) should reference host paths.
 Examples:
 
 ```bash
-cat article.md | docker run --rm caol64/wenyan-cli publish
+cat article.md | docker run --rm -i caol64/wenyan-cli render
 ```
 
 ```bash
-docker run --rm caol64/wenyan-cli publish "# Title"
+docker run --rm caol64/wenyan-cli render "# Title"
 ```
 
 ## Options
