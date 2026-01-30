@@ -1,6 +1,6 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
@@ -15,13 +15,12 @@
   ],
   "type": "module",
   "bin": {
-    "wenyan": "./bin/cli.js"
+    "wenyan": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "homepage": "https://github.com/caol64/wenyan-cli#readme",
   "repository": {
@@ -33,21 +32,28 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/index.ts",
     "upgrade:core": "pnpm update @wenyan-md/core",
-    "prepublishOnly": "pnpm build && pnpm upgrade:core",
-    "test:render": "pnpm build && node ./bin/cli.js render -f test/publish.md",
-    "test:publish": "pnpm build && pnpm dotenv -e .env.test -- node ./bin/cli.js publish -f test/publish.md -t phycat"
+    "prepublishOnly": "pnpm upgrade:core && pnpm build",
+    "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
+    "test:cli": "vitest run tests/cli.test.ts",
+    "test:render": "vitest run tests/render.test.ts",
+    "test:publish": "vitest run tests/publish.test.ts",
+    "test:realPublish": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style"
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
-    "@wenyan-md/core": "^1.0.17",
-    "commander": "^14.0.0"
+    "@wenyan-md/core": "^2.0.2",
+    "commander": "^14.0.0",
+    "form-data-encoder": "^4.1.0",
+    "formdata-node": "^6.0.3",
+    "jsdom": "^27.4.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
     "dotenv-cli": "^10.0.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }

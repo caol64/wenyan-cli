@@ -12,7 +12,7 @@
 
 ## 简介
 
-**[文颜（Wenyan）](https://wenyan.yuzhi.tech/)** 是一款多平台 Markdown 排版与发布工具，支持将 Markdown 一键转换并发布至：
+**[文颜（Wenyan）](https://wenyan.yuzhi.tech)** 是一款多平台 Markdown 排版与发布工具，支持将 Markdown 一键转换并发布至：
 
 -   微信公众号
 -   知乎
@@ -20,13 +20,6 @@
 -   以及其它内容平台（持续扩展中）
 
 文颜的目标是：**让写作者专注内容，而不是排版和平台适配**。
-
-本仓库是 **文颜的 CLI 版本**，适合以下场景：
-
--   命令行使用
--   CI / CD 自动化发布
--   脚本或工具链集成
--   与 AI / MCP 系统联动自动发文
 
 ## 文颜的不同版本
 
@@ -37,28 +30,6 @@
 -   👉 [CLI 版本](https://github.com/caol64/wenyan-cli) - 本项目
 -   [MCP 版本](https://github.com/caol64/wenyan-mcp) - AI 自动发文
 -   [核心库](https://github.com/caol64/wenyan-core) - 嵌入 Node / Web 项目
-
-## 功能特性
-
--   使用内置主题对 Markdown 内容排版
--   自动处理并上传图片（本地 / 网络）
--   支持数学公式（MathJax）
--   一键发布文章到微信公众号草稿箱
--   支持 CI / 自动化流程调用
-
-## 主题效果预览
-
-👉 [内置主题预览](https://yuzhi.tech/docs/wenyan/theme)
-
-文颜内置并适配了多个优秀的 Typora 主题，在此感谢原作者：
-
--   [Orange Heart](https://github.com/evgo2017/typora-theme-orange-heart)
--   [Rainbow](https://github.com/thezbm/typora-theme-rainbow)
--   [Lapis](https://github.com/YiNNx/typora-theme-lapis)
--   [Pie](https://github.com/kevinzhao2233/typora-theme-pie)
--   [Maize](https://github.com/BEATREE/typora-maize-theme)
--   [Purple](https://github.com/hliu202/typora-purple-theme)
--   [物理猫-薄荷](https://github.com/sumruler/typora-theme-phycat)
 
 ## 安装方式
 
@@ -115,7 +86,118 @@ CLI 主命令：
 wenyan <command> [options]
 ```
 
-目前最常用的子命令是 `publish`。
+目前支持的子命令有
+- `publish` 排版并发布到公众号草稿箱
+- `render` 仅排版，用做测试
+- `theme` 主题管理
+
+## 子命令
+
+### `publish`
+
+将 Markdown 转换为适配微信公众号的富文本 HTML，并上传到草稿箱。
+
+#### 参数
+
+-   `<input-content>`
+
+    Markdown 内容，可以：
+
+    -   直接作为参数传入
+    -   通过 stdin 管道输入
+
+#### 常用选项
+
+-   `-t <theme-id>`：主题id（默认 `default`），可以是内置主题，也可以是通过`theme --add`添加的自定义主题
+    -   [内置主题](https://github.com/caol64/wenyan-core/tree/main/src/assets/themes)
+-   `-h <highlight-theme-id>`：代码高亮主题（默认 `solarized-light`）
+    -   atom-one-dark / atom-one-light / dracula / github-dark / github / monokai / solarized-dark / solarized-light / xcode
+-   `--no-mac-style`：关闭代码块 Mac 风格
+-   `--no-footnote`：关闭链接转脚注
+-   `-f <path>`：指定本地 Markdown 文件路径
+-   `-c <path>`：指定临时自定义主题路径，优先级大于`-t`
+
+#### 使用示例
+
+直接传入内容：
+
+```bash
+wenyan publish "# Hello, Wenyan" -t lapis -h solarized-light
+```
+
+从管道读取：
+
+```bash
+cat example.md | wenyan publish -t lapis -h solarized-light --no-mac-style
+```
+
+从文件读取：
+
+```bash
+wenyan publish -f "./example.md" -t lapis -h solarized-light --no-mac-style
+```
+
+### `theme`
+
+主题管理，浏览内置主题、添加/删除自定义主题。
+
+#### 参数
+
+无。
+
+#### 常用选项
+
+-   `-l`：列出所有可用主题
+-   `--add`：添加自定义主题（永久）
+    -   `--name <name>`：主题名称
+    -   `--path <path>`：主题路径（本地或网络）
+-   `--rm <name>`：删除自定义主题
+
+#### 使用示例
+
+列出可用主题：
+
+```bash
+wenyan theme -l
+```
+
+安装自定义主题
+
+```bash
+wenyan theme --add --name new-theme --path https://wenyan.yuzhi.tech/manhua.css
+```
+
+删除自定义主题
+
+```bash
+wenyan theme --rm new-theme
+```
+
+## 使用自定义主题
+
+你可以通过两种途径使用自定义主题：
+
+- 不安装直接使用
+
+```bash
+wenyan publish -f "./example.md" -c "/path/to/theme" -h solarized-light --no-mac-style
+```
+
+- 先安装再使用：
+
+```bash
+wenyan theme --add --name new-theme --path https://wenyan.yuzhi.tech/manhua.css
+wenyan publish -f "./example.md" -t new-theme -h solarized-light --no-mac-style
+```
+
+区别在于，安装后的主题永久有效。
+
+## 关于图片自动上传
+
+支持以下图片来源：
+
+-   本地路径（如：`/Users/xxx/image.jpg`）
+-   网络路径（如：`https://example.com/image.jpg`）
 
 ## 环境变量配置
 
@@ -153,50 +235,13 @@ wenyan publish example.md
 
 控制面板 → 系统和安全 → 系统 → 高级系统设置 → 环境变量 → 添加 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET`。
 
-## 子命令
+## 微信公众号 IP 白名单
 
-`publish`
+> [!IMPORTANT]
+>
+> 请确保运行文颜的机器 IP 已加入微信公众号后台的 IP 白名单，否则上传接口将调用失败。
 
-将 Markdown 转换为适配微信公众号的富文本 HTML，并上传到草稿箱。
-
-### 参数
-
--   `<input-content>`
-
-    Markdown 内容，可以：
-
-    -   直接作为参数传入
-    -   通过 stdin 管道输入
-
-### 常用选项
-
--   `-t`：主题（默认 `default`）
-    -   default / orangeheart / rainbow / lapis / pie / maize / purple / phycat
--   `-h`：代码高亮主题（默认 `solarized-light`）
-    -   atom-one-dark / atom-one-light / dracula / github-dark / github / monokai / solarized-dark / solarized-light / xcode
--   `--no-mac-style`：关闭代码块 Mac 风格
--   `--no-footnote`：关闭链接转脚注
--   `-f`：指定本地 Markdown 文件路径
-
-## 使用示例
-
-直接传入内容：
-
-```bash
-wenyan publish "# Hello, Wenyan" -t lapis -h solarized-light
-```
-
-从管道读取：
-
-```bash
-cat example.md | wenyan publish -t lapis -h solarized-light --no-mac-style
-```
-
-从文件读取：
-
-```bash
-wenyan publish -f "./example.md" -t lapis -h solarized-light --no-mac-style
-```
+配置说明文档：[https://yuzhi.tech/docs/wenyan/upload](https://yuzhi.tech/docs/wenyan/upload)
 
 ## Markdown Frontmatter 说明（必读）
 
@@ -215,21 +260,6 @@ cover: /Users/xxx/image.jpg
 -   `cover` 文章封面
     -   本地路径或网络图片
     -   如果正文中已有图片，可省略
-
-## 关于图片自动上传
-
-支持以下图片来源：
-
--   本地路径（如：`/Users/xxx/image.jpg`）
--   网络路径（如：`https://example.com/image.jpg`）
-
-## 微信公众号 IP 白名单
-
-> ⚠️ 重要
->
-> 请确保运行文颜的机器 IP 已加入微信公众号后台的 IP 白名单，否则上传接口将调用失败。
-
-配置说明文档：[https://yuzhi.tech/docs/wenyan/upload](https://yuzhi.tech/docs/wenyan/upload)
 
 ## 示例文章格式
 
