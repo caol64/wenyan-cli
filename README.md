@@ -251,6 +251,8 @@ wenyan publish example.md
 ---
 title: 在本地跑一个大语言模型(2) - 给模型提供外部知识库
 cover: /Users/xxx/image.jpg
+author: xxx
+source_url: http://
 ---
 ```
 
@@ -260,6 +262,8 @@ cover: /Users/xxx/image.jpg
 -   `cover` 文章封面
     -   本地路径或网络图片
     -   如果正文中已有图片，可省略
+-   `author` 文章作者
+-   `source_url` 原文地址
 
 ## 示例文章格式
 
