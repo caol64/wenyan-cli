@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { publishCommand } from "./commands/publish.js";
 import { prepareRenderContext } from "./commands/render.js";
-import { serveCommand } from "./commands/serve.js";
 import pkg from "../package.json" with { type: "json" };
 import { themeCommand } from "./commands/theme.js";
 import { RenderOptions } from "./types.js";
@@ -64,9 +63,12 @@ export function createProgram(version: string = pkg.version): Command {
         .command("serve")
         .description("Start a server to provide HTTP API for rendering and publishing")
         .option("-p, --port <port>", "Port to listen on (default: 3000)", "3000")
-        .action(async (options: { port?: string }) => {
+        .option("--api-key <apiKey>", "API key for authentication")
+        .action(async (options: { port?: string, apiKey?: string; }) => {
             try {
-                await serveCommand({ port: options.port ? parseInt(options.port, 10) : 3000 });
+                const { serveCommand } = await import("./commands/serve.js");
+                const port = options.port ? parseInt(options.port, 10) : 3000;
+                await serveCommand({ port, version, apiKey: options.apiKey });
             } catch (error: any) {
                 console.error(error.message);
                 process.exit(1);

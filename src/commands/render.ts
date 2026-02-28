@@ -2,7 +2,7 @@ import { configStore, renderStyledContent, StyledContent } from "@wenyan-md/core
 import { getNormalizeFilePath, readStdin } from "../utils.js";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { RenderOptions } from "../types.js";
+import { AppError, RenderOptions } from "../types.js";
 
 interface RenderContext {
     gzhContent: StyledContent;
@@ -31,7 +31,7 @@ export async function prepareRenderContext(
 
     // 3. 校验输入
     if (!inputContent) {
-        throw new Error("Error: missing input-content (no argument, no stdin, and no file).");
+        throw new AppError("missing input-content (no argument, no stdin, and no file).");
     }
 
     let handledCustomTheme: string | undefined = customTheme;
@@ -45,7 +45,7 @@ export async function prepareRenderContext(
     }
 
     if (!handledCustomTheme && !theme) {
-        throw new Error(`Error: theme "${theme}" not found.`);
+        throw new AppError(`theme "${theme}" not found.`);
     }
 
     // 5. 执行核心渲染

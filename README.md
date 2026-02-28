@@ -29,6 +29,7 @@
 -   [跨平台桌面版](https://github.com/caol64/wenyan-pc) - Windows/Linux
 -   👉 [CLI 版本](https://github.com/caol64/wenyan-cli) - 本项目
 -   [MCP 版本](https://github.com/caol64/wenyan-mcp) - AI 自动发文
+-   [UI 库](https://github.com/caol64/wenyan-ui) - 桌面应用和 Web App 共用的 UI 层封装
 -   [核心库](https://github.com/caol64/wenyan-core) - 嵌入 Node / Web 项目
 
 ## 安装方式
@@ -219,6 +220,35 @@ curl -X POST http://localhost:3000/publish \
 ```
 
 > 说明：发布接口会自动解析 Markdown 文件顶部的 frontmatter 获取标题、封面等信息。
+
+**上传接口**
+
+支持上传图片和 Markdown 文件，文件将保存在服务器临时目录下，返回 UUID 作为文件 ID。
+
+```bash
+# 上传 Markdown 文件
+curl -X POST http://localhost:3000/upload \
+  -F "file=@/path/to/article.md"
+
+# 上传图片
+curl -X POST http://localhost:3000/upload \
+  -F "file=@/path/to/image.png"
+```
+
+响应示例：
+
+```json
+{
+  "success": true,
+  "data": {
+    "fileId": "550e8400-e29b-41d4-a716-446655440000",
+    "filename": "550e8400-e29b-41d4-a716-446655440000.md",
+    "originalFilename": "article.md",
+    "mimetype": "text/markdown",
+    "size": 1024
+  }
+}
+```
 
 ## 使用自定义主题
 
