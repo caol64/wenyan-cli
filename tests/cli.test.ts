@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createProgram } from "../src/index.js";
 import { publishCommand } from "../src/commands/publish.js";
-import { renderCommand } from "../src/commands/render.js";
+import { prepareRenderContext } from "../src/commands/render.js";
 
 vi.mock("../src/commands/publish.js", () => ({
     publishCommand: vi.fn(),
 }));
 
 vi.mock("../src/commands/render.js", () => ({
-    renderCommand: vi.fn(),
+    prepareRenderContext: vi.fn().mockResolvedValue({
+        gzhContent: { content: "<h1>Hello</h1>" },
+        absoluteDirPath: "/mock/path",
+    }),
 }));
 
 describe("CLI Argument Parsing", () => {
@@ -38,12 +41,13 @@ describe("CLI Argument Parsing", () => {
         // 第二个参数是 options 对象
         const expectedOptions = expect.objectContaining({
             file: "test.md",
+            footnote: true,
             theme: "rainbow",
-            macStyle: false, // --no-mac-style 应该让这个值为 false
-            highlight: "solarized-light", // 默认值
+            macStyle: false,
+            highlight: "solarized-light",
         });
 
-        expect(publishCommand).toHaveBeenCalledWith(undefined, expectedOptions, expect.anything());
+        expect(publishCommand).toHaveBeenCalledWith(undefined, expectedOptions);
     });
 
     it("should call render command with string input", async () => {
@@ -52,8 +56,14 @@ describe("CLI Argument Parsing", () => {
 
         await program.parseAsync(args);
 
-        expect(renderCommand).toHaveBeenCalledTimes(1);
-        expect(renderCommand).toHaveBeenCalledWith("# Hello", expect.anything(), expect.anything());
+        expect(prepareRenderContext).toHaveBeenCalledTimes(1);
+        const expectedOptions = expect.objectContaining({
+            footnote: true,
+            theme: "default",
+            macStyle: true,
+            highlight: "solarized-light",
+        });
+        expect(prepareRenderContext).toHaveBeenCalledWith("# Hello", expectedOptions);
     });
 
     it("should display help when no command is provided", async () => {

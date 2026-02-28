@@ -1,8 +1,10 @@
 import { Command } from "commander";
 import { publishCommand } from "./commands/publish.js";
-import { renderCommand } from "./commands/render.js";
+import { prepareRenderContext } from "./commands/render.js";
+import { serveCommand } from "./commands/serve.js";
 import pkg from "../package.json" with { type: "json" };
 import { themeCommand } from "./commands/theme.js";
+import { RenderOptions } from "./types.js";
 
 export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
@@ -32,11 +34,21 @@ export function createProgram(version: string = pkg.version): Command {
         .command("publish")
         .description("Render a markdown file to styled HTML and publish to wechat GZH");
 
-    addCommonOptions(pubCmd).action(publishCommand);
+    addCommonOptions(pubCmd).action(async (inputContent: string | undefined, options: RenderOptions) => {
+        await runCommandWrapper(async () => {
+            const mediaId = await publishCommand(inputContent, options);
+            console.log(mediaId);
+        });
+    });
 
     const renderCmd = program.command("render").description("Render a markdown file to styled HTML");
 
-    addCommonOptions(renderCmd).action(renderCommand);
+    addCommonOptions(renderCmd).action(async (inputContent: string | undefined, options: RenderOptions) => {
+        await runCommandWrapper(async () => {
+            const { gzhContent } = await prepareRenderContext(inputContent, options);
+            console.log(gzhContent.content);
+        });
+    });
 
     program
         .command("theme")
@@ -48,5 +60,36 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--rm <name>", "Name of the custom theme to remove")
         .action(themeCommand);
 
+    program
+        .command("serve")
+        .description("Start a server to provide HTTP API for rendering and publishing")
+        .option("-p, --port <port>", "Port to listen on (default: 3000)", "3000")
+        .action(async (options: { port?: string }) => {
+            try {
+                await serveCommand({ port: options.port ? parseInt(options.port, 10) : 3000 });
+            } catch (error: any) {
+                console.error(error.message);
+                process.exit(1);
+            }
+        });
+
     return program;
+}
+
+// --- 统一的错误处理包装器 ---
+async function runCommandWrapper(action: () => Promise<void>) {
+    try {
+        await action();
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message.startsWith("Error:")) {
+                console.error(error.message);
+            } else {
+                console.error("An unexpected error occurred:", error.message);
+            }
+        } else {
+            console.error("An unexpected error occurred:", error);
+        }
+        process.exit(1);
+    }
 }

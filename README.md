@@ -90,6 +90,7 @@ wenyan <command> [options]
 - `publish` 排版并发布到公众号草稿箱
 - `render` 仅排版，用做测试
 - `theme` 主题管理
+- `serve` 启动 HTTP 服务器，提供渲染和发布接口（Server 模式）
 
 ## 子命令
 
@@ -172,6 +173,52 @@ wenyan theme --add --name new-theme --path https://wenyan.yuzhi.tech/manhua.css
 ```bash
 wenyan theme --rm new-theme
 ```
+
+### `serve`
+
+启动 HTTP 服务器，提供 REST API 接口。适用于部署在云服务器上，解决微信公众号 API 需要固定 IP 白名单的问题。
+
+#### 常用选项
+
+-   `-p, --port <port>`：监听端口（默认 `3000`）
+
+#### 使用示例
+
+启动服务器：
+
+```bash
+wenyan serve --port 3000
+```
+
+#### API 接口
+
+**健康检查**
+
+```bash
+curl http://localhost:3000/health
+```
+
+**渲染接口**
+
+```bash
+curl -X POST http://localhost:3000/render \
+  -H "Content-Type: application/json" \
+  -d '{"content": "# Hello World\n\n这是一段测试。", "theme": "default", "highlight": "solarized-light"}'
+```
+
+**发布接口**
+
+```bash
+curl -X POST http://localhost:3000/publish \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": "/path/to/article.md",
+    "theme": "default",
+    "highlight": "solarized-light"
+  }'
+```
+
+> 说明：发布接口会自动解析 Markdown 文件顶部的 frontmatter 获取标题、封面等信息。
 
 ## 使用自定义主题
 

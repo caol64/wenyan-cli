@@ -1,11 +1,19 @@
-import { configStore, renderStyledContent } from "@wenyan-md/core/wrapper";
+import { configStore, renderStyledContent, StyledContent } from "@wenyan-md/core/wrapper";
 import { getNormalizeFilePath, readStdin } from "../utils.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { RenderOptions } from "../types.js";
 
+interface RenderContext {
+    gzhContent: StyledContent;
+    absoluteDirPath: string | undefined;
+}
+
 // --- 处理输入源、文件路径和主题 ---
-export async function prepareRenderContext(inputContent: string | undefined, options: RenderOptions) {
+export async function prepareRenderContext(
+    inputContent: string | undefined,
+    options: RenderOptions,
+): Promise<RenderContext> {
     const { file, theme, customTheme, highlight, macStyle, footnote } = options;
     let absoluteDirPath: string | undefined = undefined;
 
@@ -50,29 +58,4 @@ export async function prepareRenderContext(inputContent: string | undefined, opt
     });
 
     return { gzhContent, absoluteDirPath };
-}
-
-// --- 统一的错误处理包装器 ---
-export async function runCommandWrapper(action: () => Promise<void>) {
-    try {
-        await action();
-    } catch (error) {
-        if (error instanceof Error) {
-            if (error.message.startsWith("Error:")) {
-                console.error(error.message);
-            } else {
-                console.error("An unexpected error occurred:", error.message);
-            }
-        } else {
-            console.error("An unexpected error occurred:", error);
-        }
-        process.exit(1);
-    }
-}
-
-export async function renderCommand(inputContent: string | undefined, options: RenderOptions) {
-    await runCommandWrapper(async () => {
-        const { gzhContent } = await prepareRenderContext(inputContent, options);
-        console.log(gzhContent.content);
-    });
 }

@@ -125,6 +125,37 @@ WECHAT_APP_SECRET=yyy
 -   Runtime: Node.js (bundled)
 -   Architecture: `linux/amd64`, `linux/arm64`
 
+## Server Mode
+
+Deploy on a cloud server with fixed IP to solve WeChat API whitelist requirements:
+
+```bash
+docker run -d --name wenyan-server \
+  -p 3000:3000 \
+  --env-file .env \
+  caol64/wenyan-cli \
+  serve --port 3000
+```
+
+Then call the REST API from your local machine:
+
+```bash
+# Health check
+curl http://your-server-ip:3000/health
+
+# Render
+curl -X POST http://your-server-ip:3000/render \
+  -H "Content-Type: application/json" \
+  -d '{"content": "# Hello World", "theme": "default"}'
+
+# Publish
+curl -X POST http://your-server-ip:3000/publish \
+  -H "Content-Type: application/json" \
+  -d '{"file": "/mnt/host-downloads/article.md"}'
+```
+
+> **Note:** Add your server's public IP to WeChat Official Account whitelist once, and it works permanently.
+
 ## License
 
 Apache License Version 2.0

@@ -6,11 +6,3 @@ export interface RenderOptions {
     macStyle: boolean;
     footnote: boolean;
 }
-
-export interface ThemeOptions {
-    list?: boolean;
-    add?: boolean;
-    name?: string;
-    path?: string;
-    rm?: string;
-}

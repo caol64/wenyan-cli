@@ -1,8 +1,15 @@
 import { getAllGzhThemes } from "@wenyan-md/core";
-import { ThemeOptions } from "../types.js";
 import { getNormalizeFilePath } from "../utils.js";
 import fs from "node:fs/promises";
 import { configStore } from "@wenyan-md/core/wrapper";
+
+interface ThemeOptions {
+    list?: boolean;
+    add?: boolean;
+    name?: string;
+    path?: string;
+    rm?: string;
+}
 
 export async function themeCommand(options: ThemeOptions) {
     const { list, add, name, path, rm } = options;
