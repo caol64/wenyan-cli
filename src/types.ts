@@ -7,6 +7,11 @@ export interface RenderOptions {
     footnote: boolean;
 }
 
+export interface PublishOptions extends RenderOptions {
+    server?: string;
+    apiKey?: string;
+}
+
 export class AppError extends Error {
     constructor(public message: string) {
         super(message);

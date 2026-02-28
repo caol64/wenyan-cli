@@ -3,7 +3,7 @@ import { publishCommand } from "./commands/publish.js";
 import { prepareRenderContext } from "./commands/render.js";
 import pkg from "../package.json" with { type: "json" };
 import { themeCommand } from "./commands/theme.js";
-import { RenderOptions } from "./types.js";
+import { PublishOptions, RenderOptions } from "./types.js";
 
 export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
@@ -33,12 +33,24 @@ export function createProgram(version: string = pkg.version): Command {
         .command("publish")
         .description("Render a markdown file to styled HTML and publish to wechat GZH");
 
-    addCommonOptions(pubCmd).action(async (inputContent: string | undefined, options: RenderOptions) => {
-        await runCommandWrapper(async () => {
-            const mediaId = await publishCommand(inputContent, options);
-            console.log(mediaId);
+    // 先添加公共选项，再追加 publish 专属选项
+    addCommonOptions(pubCmd)
+        .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
+        .option("--api-key <apiKey>", "API key for the remote server")
+        .action(async (inputContent: string | undefined, options: PublishOptions) => {
+            await runCommandWrapper(async () => {
+                // 如果传入了 --server，则走客户端（远程）模式
+                if (options.server) {
+                    const { publishClient } = await import("./commands/client.js");
+                    const mediaId = await publishClient(inputContent, options);
+                    console.log(`[Remote Publish Success] Media ID: ${mediaId}`);
+                } else {
+                    // 走原有的本地直接发布模式
+                    const mediaId = await publishCommand(inputContent, options);
+                    console.log(`[Local Publish Success] Media ID: ${mediaId}`);
+                }
+            });
         });
-    });
 
     const renderCmd = program.command("render").description("Render a markdown file to styled HTML");
 
@@ -64,7 +76,7 @@ export function createProgram(version: string = pkg.version): Command {
         .description("Start a server to provide HTTP API for rendering and publishing")
         .option("-p, --port <port>", "Port to listen on (default: 3000)", "3000")
         .option("--api-key <apiKey>", "API key for authentication")
-        .action(async (options: { port?: string, apiKey?: string; }) => {
+        .action(async (options: { port?: string; apiKey?: string }) => {
             try {
                 const { serveCommand } = await import("./commands/serve.js");
                 const port = options.port ? parseInt(options.port, 10) : 3000;

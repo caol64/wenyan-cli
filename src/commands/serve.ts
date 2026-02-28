@@ -7,6 +7,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { configDir } from "@wenyan-md/core/wrapper";
 import multer from "multer";
+import { getNormalizeFilePath } from "../utils.js";
 
 export interface ServeOptions {
     port?: number;
@@ -32,6 +33,8 @@ export async function serveCommand(options: ServeOptions) {
         fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
 
+    // 服务启动时立即执行一次后台清理
+    cleanupOldUploads();
     // 定期清理过期的上传文件
     setInterval(cleanupOldUploads, UPLOAD_TTL_MS).unref();
 
@@ -79,33 +82,14 @@ export async function serveCommand(options: ServeOptions) {
         res.json({ status: "ok", service: "wenyan-cli", version: options.version || "unknown" });
     });
 
-    // 提供文件访问服务（用于 Markdown 内部引用刚刚上传的本地图片）
-    app.get("/file/:fileId", async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const { fileId } = req.params;
-            const files = await fsPromises.readdir(UPLOAD_DIR);
-            // 通过无后缀的 fileId 匹配实际包含后缀的文件名
-            const matchedFile = files.find((f) => path.parse(f).name === fileId);
-
-            if (!matchedFile) {
-                return res.status(404).json({ code: -1, desc: "文件不存在或已过期" });
-            }
-            res.sendFile(path.join(UPLOAD_DIR, matchedFile));
-        } catch (error) {
-            next(error);
-        }
-    });
-
     // 发布接口 - 读取 md 文件内容并发布
     app.post("/publish", auth, async (req: Request, res: Response) => {
         const body: RenderRequest = req.body;
         validateRequest(body);
 
-        let inputContent = "";
-
         // 根据 fileId 去找刚上传的 markdown 文件并读取内容
         const files = await fsPromises.readdir(UPLOAD_DIR);
-        const matchedFile = files.find((f) => path.parse(f).name === body.fileId);
+        const matchedFile = files.find((f) => f === body.fileId);
 
         if (!matchedFile) {
             throw new AppError(`文件不存在或已过期，请重新上传 (ID: ${body.fileId})`);
@@ -121,7 +105,23 @@ export async function serveCommand(options: ServeOptions) {
         const filePath = path.join(UPLOAD_DIR, matchedFile);
 
         // 提取文件真实文本内容
-        inputContent = await fsPromises.readFile(filePath, "utf-8");
+        let inputContent = await fsPromises.readFile(filePath, "utf-8");
+
+        // 替换 asset://fileId 为图片绝对路径
+
+        inputContent = inputContent.replace(/asset:\/\/([^\s)"']+)/g, (match, assetFileId) => {
+            // 在刚才读取的 files 列表中寻找对应的图片文件
+            const matchedAsset = files.find((f) => f === assetFileId);
+
+            if (matchedAsset) {
+                // 拼接绝对路径
+                let absoluteAssetPath = getNormalizeFilePath(path.join(UPLOAD_DIR, matchedAsset));
+                return absoluteAssetPath;
+            }
+
+            console.warn(`[Server Warning]: Referenced asset not found for fileId: ${assetFileId}`);
+            return match; // 如果找不到对应的文件，保持原样不替换
+        });
 
         const renderOptions = toRenderOptions(body);
         const media_id = await publishCommand(inputContent, renderOptions);
@@ -138,13 +138,11 @@ export async function serveCommand(options: ServeOptions) {
         }
 
         const newFilename = req.file.filename;
-        const fileId = path.parse(newFilename).name;
 
         res.json({
             success: true,
             data: {
-                fileId,
-                filename: newFilename,
+                fileId: newFilename,
                 originalFilename: req.file.originalname,
                 mimetype: req.file.mimetype,
                 size: req.file.size,
@@ -158,7 +156,6 @@ export async function serveCommand(options: ServeOptions) {
         const server = app.listen(port, () => {
             console.log(`文颜 Server 已启动，监听端口 ${port}`);
             console.log(`健康检查：http://localhost:${port}/health`);
-            console.log(`静态文件：GET  http://localhost:${port}/file/:fileId`);
             console.log(`发布接口：POST http://localhost:${port}/publish`);
             console.log(`上传接口：POST http://localhost:${port}/upload`);
         });

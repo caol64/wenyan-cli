@@ -27,7 +27,7 @@
 
 -   [macOS App Store 版](https://github.com/caol64/wenyan) - MAC 桌面应用
 -   [跨平台桌面版](https://github.com/caol64/wenyan-pc) - Windows/Linux
--   👉 [CLI 版本](https://github.com/caol64/wenyan-cli) - 本项目
+-   👉[CLI 版本](https://github.com/caol64/wenyan-cli) - 本项目
 -   [MCP 版本](https://github.com/caol64/wenyan-mcp) - AI 自动发文
 -   [UI 库](https://github.com/caol64/wenyan-ui) - 桌面应用和 Web App 共用的 UI 层封装
 -   [核心库](https://github.com/caol64/wenyan-core) - 嵌入 Node / Web 项目
@@ -84,16 +84,16 @@ docker run --rm \
 CLI 主命令：
 
 ```bash
-wenyan <command> [options]
+wenyan <command>[options]
 ```
 
-目前支持的子命令有
-- `publish` 排版并发布到公众号草稿箱
-- `render` 仅排版，用做测试
-- `theme` 主题管理
+目前支持的子命令有：
+- `publish` 排版并发布到公众号草稿箱（支持纯本地模式与 Client-Server 远程发布模式）
+- `render` 仅排版并输出 HTML，用于本地测试
+- `theme` 终端主题管理
 - `serve` 启动 HTTP 服务器，提供渲染和发布接口（Server 模式）
 
-## 子命令
+## 子命令详解
 
 ### `publish`
 
@@ -102,24 +102,29 @@ wenyan <command> [options]
 #### 参数
 
 -   `<input-content>`
+    Markdown 内容，可以直接作为参数传入，或通过 stdin 管道输入。
 
-    Markdown 内容，可以：
+#### 常用排版选项
 
-    -   直接作为参数传入
-    -   通过 stdin 管道输入
+-   `-t, --theme <theme-id>`：主题id（默认 `default`），支持内置主题或通过 `theme --add` 添加的自定义主题。
+    -   [内置主题一览](https://github.com/caol64/wenyan-core/tree/main/src/assets/themes)
+-   `-c, --custom-theme <path>`：指定临时自定义主题的本地/网络路径（优先级高于 `-t`）
+-   `-h, --highlight <highlight-theme-id>`：代码高亮主题（默认 `solarized-light`）
+    -   支持：atom-one-dark / atom-one-light / dracula / github-dark / github / monokai / solarized-dark / solarized-light / xcode
+-   `-f, --file <path>`：指定本地 Markdown 文件路径
+-   `--no-mac-style`：关闭代码块 Mac 窗口风格
+-   `--no-footnote`：关闭链接转脚注功能
 
-#### 常用选项
+#### 远程模式选项 (Client-Server 架构)
 
--   `-t <theme-id>`：主题id（默认 `default`），可以是内置主题，也可以是通过`theme --add`添加的自定义主题
-    -   [内置主题](https://github.com/caol64/wenyan-core/tree/main/src/assets/themes)
--   `-h <highlight-theme-id>`：代码高亮主题（默认 `solarized-light`）
-    -   atom-one-dark / atom-one-light / dracula / github-dark / github / monokai / solarized-dark / solarized-light / xcode
--   `--no-mac-style`：关闭代码块 Mac 风格
--   `--no-footnote`：关闭链接转脚注
--   `-f <path>`：指定本地 Markdown 文件路径
--   `-c <path>`：指定临时自定义主题路径，优先级大于`-t`
+为了解决微信公众号 API 需要固定 IP 的限制，你可以将 CLI 配置为客户端模式，连接到部署在云服务器上的文颜 Server。**在此模式下，客户端会自动解析 Markdown 中的本地图片（包括封面），一并自动上传至 Server 处理，体验与本地发布完全一致！**
+
+-   `--server <url>`：指定远程文颜 Server 的地址（例如：`https://api.yourdomain.com`）
+-   `--api-key <apiKey>`：请求 Server 的鉴权密钥
 
 #### 使用示例
+
+**【本地模式】（需要当前机器拥有固定的公网 IP 并已加入微信白名单）**
 
 直接传入内容：
 
@@ -139,146 +144,69 @@ cat example.md | wenyan publish -t lapis -h solarized-light --no-mac-style
 wenyan publish -f "./example.md" -t lapis -h solarized-light --no-mac-style
 ```
 
+**【远程客户端模式】（无需配置微信环境，一键委托云端 Server 发布）**
+```bash
+wenyan publish -f "./example.md" -t lapis --server https://localhost:3000 --api-key "my-secret-key"
+```
+
+---
+
 ### `theme`
 
 主题管理，浏览内置主题、添加/删除自定义主题。
 
-#### 参数
-
-无。
-
 #### 常用选项
 
--   `-l`：列出所有可用主题
+-   `-l, --list`：列出所有可用主题
 -   `--add`：添加自定义主题（永久）
     -   `--name <name>`：主题名称
-    -   `--path <path>`：主题路径（本地或网络）
+    -   `--path <path>`：主题路径（本地路径或网络 URL）
 -   `--rm <name>`：删除自定义主题
 
 #### 使用示例
 
-列出可用主题：
-
 ```bash
+# 列出可用主题
 wenyan theme -l
-```
 
-安装自定义主题
-
-```bash
+# 安装自定义主题
 wenyan theme --add --name new-theme --path https://wenyan.yuzhi.tech/manhua.css
-```
 
-删除自定义主题
-
-```bash
+# 删除自定义主题
 wenyan theme --rm new-theme
 ```
 
 ### `serve`
 
-启动 HTTP 服务器，提供 REST API 接口。适用于部署在云服务器上，解决微信公众号 API 需要固定 IP 白名单的问题。
+启动 HTTP 服务器，提供 REST API 接口。适用于部署在云服务器上，完美解决本地网络环境多变导致**无法通过微信公众号 API 白名单**的问题。
 
 #### 常用选项
 
 -   `-p, --port <port>`：监听端口（默认 `3000`）
+-   `--api-key <apiKey>`：开启 API 调用鉴权。若设置，客户端必须提供相同的密钥。
 
 #### 使用示例
 
-启动服务器：
+在具有固定 IP 的云服务器上启动服务：
 
 ```bash
-wenyan serve --port 3000
+# 务必在服务器环境变量中配置好 WECHAT_APP_ID 和 WECHAT_APP_SECRET
+wenyan serve --port 3000 --api-key "my-secret-key"
 ```
 
-#### API 接口
+#### [API 接口设计](docs/server.md)
 
-**健康检查**
+## 关于图片与封面自动上传
 
-```bash
-curl http://localhost:3000/health
-```
+无论是本地模式还是通过 `--server` 的客户端模式，文颜 CLI 都提供**极度智能**的图片处理机制：
 
-**渲染接口**
-
-```bash
-curl -X POST http://localhost:3000/render \
-  -H "Content-Type: application/json" \
-  -d '{"content": "# Hello World\n\n这是一段测试。", "theme": "default", "highlight": "solarized-light"}'
-```
-
-**发布接口**
-
-```bash
-curl -X POST http://localhost:3000/publish \
-  -H "Content-Type: application/json" \
-  -d '{
-    "file": "/path/to/article.md",
-    "theme": "default",
-    "highlight": "solarized-light"
-  }'
-```
-
-> 说明：发布接口会自动解析 Markdown 文件顶部的 frontmatter 获取标题、封面等信息。
-
-**上传接口**
-
-支持上传图片和 Markdown 文件，文件将保存在服务器临时目录下，返回 UUID 作为文件 ID。
-
-```bash
-# 上传 Markdown 文件
-curl -X POST http://localhost:3000/upload \
-  -F "file=@/path/to/article.md"
-
-# 上传图片
-curl -X POST http://localhost:3000/upload \
-  -F "file=@/path/to/image.png"
-```
-
-响应示例：
-
-```json
-{
-  "success": true,
-  "data": {
-    "fileId": "550e8400-e29b-41d4-a716-446655440000",
-    "filename": "550e8400-e29b-41d4-a716-446655440000.md",
-    "originalFilename": "article.md",
-    "mimetype": "text/markdown",
-    "size": 1024
-  }
-}
-```
-
-## 使用自定义主题
-
-你可以通过两种途径使用自定义主题：
-
-- 不安装直接使用
-
-```bash
-wenyan publish -f "./example.md" -c "/path/to/theme" -h solarized-light --no-mac-style
-```
-
-- 先安装再使用：
-
-```bash
-wenyan theme --add --name new-theme --path https://wenyan.yuzhi.tech/manhua.css
-wenyan publish -f "./example.md" -t new-theme -h solarized-light --no-mac-style
-```
-
-区别在于，安装后的主题永久有效。
-
-## 关于图片自动上传
-
-支持以下图片来源：
-
--   本地路径（如：`/Users/xxx/image.jpg`）
--   网络路径（如：`https://example.com/image.jpg`）
+- 识别并支持本地硬盘绝对路径（如：`/Users/xxx/image.jpg`）
+- 识别并支持当前目录的相对路径（如：`./assets/image.png`）
+- 识别并支持网络路径（如：`https://example.com/image.jpg`）
 
 ## 环境变量配置
 
-部分功能（如发布微信公众号）需要配置以下环境变量：
+在实际向微信公众号发文的环境（你的本地或部署 `serve` 的服务器）中，必须配置以下环境变量：
 
 -   `WECHAT_APP_ID`
 -   `WECHAT_APP_SECRET`
@@ -291,8 +219,7 @@ wenyan publish -f "./example.md" -t new-theme -h solarized-light --no-mac-style
 WECHAT_APP_ID=xxx WECHAT_APP_SECRET=yyy wenyan publish "your markdown"
 ```
 
-永久配置（推荐）：
-
+永久配置（推荐，写入 `~/.bashrc` 或 `~/.zshrc`）：
 ```bash
 export WECHAT_APP_ID=xxx
 export WECHAT_APP_SECRET=yyy
@@ -301,14 +228,13 @@ export WECHAT_APP_SECRET=yyy
 ### Windows (PowerShell)
 
 临时使用：
-
 ```powershell
 $env:WECHAT_APP_ID="xxx"
 $env:WECHAT_APP_SECRET="yyy"
 wenyan publish example.md
 ```
 
-永久设置（在环境变量里添加）：
+永久设置（推荐）：
 
 控制面板 → 系统和安全 → 系统 → 高级系统设置 → 环境变量 → 添加 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET`。
 

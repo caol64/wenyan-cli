@@ -34,12 +34,13 @@
     "build": "tsc",
     "upgrade:core": "pnpm update @wenyan-md/core",
     "prepublishOnly": "pnpm upgrade:core && pnpm build",
-    "server": "pnpm build && node ./dist/cli.js serve",
+    "server": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js serve",
     "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
     "test:cli": "vitest run tests/cli.test.ts",
     "test:render": "vitest run tests/render.test.ts",
     "test:publish": "vitest run tests/publish.test.ts",
-    "test:realPublish": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style"
+    "test:realPublish": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style",
+    "test:serverPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000"
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
