@@ -1,6 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { publishCommand } from "./publish.js";
-import { AppError, RenderOptions } from "../types.js";
+import { AppError } from "../types.js";
 import fs from "node:fs";
 import fsPromises from "node:fs/promises";
 import path from "node:path";
@@ -8,6 +7,7 @@ import crypto from "node:crypto";
 import { configDir } from "@wenyan-md/core/wrapper";
 import multer from "multer";
 import { getNormalizeFilePath } from "../utils.js";
+import { publishToWechatDraft } from "@wenyan-md/core/publish";
 
 export interface ServeOptions {
     port?: number;
@@ -62,17 +62,22 @@ export async function serveCommand(options: ServeOptions) {
         },
         fileFilter: (req, file, cb) => {
             const ext = file.originalname.split(".").pop()?.toLowerCase();
+
+            // 1. 定义允许的图片类型
             const allowedImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
-            const allowedExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "md"];
+            const allowedImageExts = ["jpg", "jpeg", "png", "gif", "webp", "svg"];
 
-            const isImage =
-                allowedImageTypes.includes(file.mimetype) || (ext && allowedExtensions.includes(ext) && ext !== "md");
+            // 2. 分别判断文件大类
+            const isImage = allowedImageTypes.includes(file.mimetype) || (ext && allowedImageExts.includes(ext));
             const isMarkdown = ext === "md" || file.mimetype === "text/markdown" || file.mimetype === "text/plain";
+            const isCss = ext === "css" || file.mimetype === "text/css";
+            const isJson = ext === "json" || file.mimetype === "application/json";
 
-            if (isImage || isMarkdown) {
+            // 3. 综合放行逻辑
+            if (isImage || isMarkdown || isCss || isJson) {
                 cb(null, true);
             } else {
-                cb(new AppError("不支持的文件类型，仅支持图片和 markdown 文件"));
+                cb(new AppError("不支持的文件类型，仅支持图片、Markdown、CSS 和 JSON 文件"));
             }
         },
     });
@@ -82,12 +87,17 @@ export async function serveCommand(options: ServeOptions) {
         res.json({ status: "ok", service: "wenyan-cli", version: options.version || "unknown" });
     });
 
-    // 发布接口 - 读取 md 文件内容并发布
+    // 鉴权探针
+    app.get("/verify", auth, (_req: Request, res: Response) => {
+        res.json({ success: true, message: "Authorized" });
+    });
+
+    // 发布接口 - 读取 json 文件内容并发布
     app.post("/publish", auth, async (req: Request, res: Response) => {
         const body: RenderRequest = req.body;
         validateRequest(body);
 
-        // 根据 fileId 去找刚上传的 markdown 文件并读取内容
+        // 根据 fileId 去找刚上传的 json 文件并读取内容
         const files = await fsPromises.readdir(UPLOAD_DIR);
         const matchedFile = files.find((f) => f === body.fileId);
 
@@ -97,38 +107,49 @@ export async function serveCommand(options: ServeOptions) {
 
         // 简单的防呆校验，防止直接提交纯图片的 fileId 到发布接口
         const ext = path.extname(matchedFile).toLowerCase();
-        const imageExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
-        if (imageExts.includes(ext)) {
-            throw new AppError("请提供 Markdown 文件的 fileId，不能直接发布图片文件");
+        if (ext !== ".json") {
+            throw new AppError("请提供 JSON 文件的 fileId，不能直接发布图片文件");
         }
 
+        // 找到上传文件并提取文本内容
         const filePath = path.join(UPLOAD_DIR, matchedFile);
+        const fileContent = await fsPromises.readFile(filePath, "utf-8");
+        const gzhContent = JSON.parse(fileContent);
 
-        // 提取文件真实文本内容
-        let inputContent = await fsPromises.readFile(filePath, "utf-8");
+        // 公共的 asset:// 替换逻辑
+        const resolveAssetPath = (assetUrl: string) => {
+            const assetFileId = assetUrl.replace("asset://", "");
+            const matchedAsset = files.find((f) => f === assetFileId || path.parse(f).name === assetFileId);
+            return matchedAsset ? getNormalizeFilePath(path.join(UPLOAD_DIR, matchedAsset)) : assetUrl;
+        };
 
-        // 替换 asset://fileId 为图片绝对路径
+        // 替换 HTML 内容里的 asset://
+        gzhContent.content = gzhContent.content.replace(
+            /(<img\b[^>]*?\bsrc\s*=\s*["'])(asset:\/\/[^"']+)(["'])/gi,
+            (_match: any, prefix: string, assetUrl: string, suffix: string) =>
+                prefix + resolveAssetPath(assetUrl) + suffix,
+        );
 
-        inputContent = inputContent.replace(/asset:\/\/([^\s)"']+)/g, (match, assetFileId) => {
-            // 在刚才读取的 files 列表中寻找对应的图片文件
-            const matchedAsset = files.find((f) => f === assetFileId);
+        // 替换封面里的 asset://
+        if (gzhContent.cover && gzhContent.cover.startsWith("asset://")) {
+            gzhContent.cover = resolveAssetPath(gzhContent.cover);
+        }
 
-            if (matchedAsset) {
-                // 拼接绝对路径
-                let absoluteAssetPath = getNormalizeFilePath(path.join(UPLOAD_DIR, matchedAsset));
-                return absoluteAssetPath;
-            }
-
-            console.warn(`[Server Warning]: Referenced asset not found for fileId: ${assetFileId}`);
-            return match; // 如果找不到对应的文件，保持原样不替换
+        const data = await publishToWechatDraft({
+            title: gzhContent.title,
+            content: gzhContent.content,
+            cover: gzhContent.cover,
+            author: gzhContent.author,
+            source_url: gzhContent.source_url,
         });
 
-        const renderOptions = toRenderOptions(body);
-        const media_id = await publishCommand(inputContent, renderOptions);
-
-        res.json({
-            media_id: media_id,
-        });
+        if (data.media_id) {
+            res.json({
+                media_id: data.media_id,
+            });
+        } else {
+            throw new AppError(`上传失败，\n${data}`);
+        }
     });
 
     // 上传接口
@@ -156,6 +177,7 @@ export async function serveCommand(options: ServeOptions) {
         const server = app.listen(port, () => {
             console.log(`文颜 Server 已启动，监听端口 ${port}`);
             console.log(`健康检查：http://localhost:${port}/health`);
+            console.log(`鉴权探针：http://localhost:${port}/verify`);
             console.log(`发布接口：POST http://localhost:${port}/publish`);
             console.log(`上传接口：POST http://localhost:${port}/upload`);
         });
@@ -227,16 +249,6 @@ function validateRequest(req: RenderRequest): void {
     if (!req.fileId) {
         throw new AppError("缺少必要参数：fileId");
     }
-}
-
-function toRenderOptions(body: RenderRequest): RenderOptions {
-    return {
-        theme: body.theme || "default",
-        customTheme: body.customTheme,
-        highlight: body.highlight || "solarized-light",
-        macStyle: body.macStyle !== false,
-        footnote: body.footnote !== false,
-    };
 }
 
 async function cleanupOldUploads() {

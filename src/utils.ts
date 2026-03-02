@@ -23,8 +23,8 @@ function normalizePath(p: string): string {
 
 export function getNormalizeFilePath(inputPath: string): string {
     const isContainer = !!process.env.CONTAINERIZED;
-    if (isContainer) {
-        const hostFilePath = normalizePath(process.env.HOST_FILE_PATH || "");
+    const hostFilePath = normalizePath(process.env.HOST_FILE_PATH || "");
+    if (isContainer && hostFilePath) {
         const containerFilePath = normalizePath(process.env.CONTAINER_FILE_PATH || "/mnt/host-downloads");
         let relativePart = normalizePath(inputPath);
         if (relativePart.startsWith(hostFilePath)) {
@@ -34,7 +34,6 @@ export function getNormalizeFilePath(inputPath: string): string {
         if (!relativePart.startsWith("/")) {
             relativePart = "/" + relativePart;
         }
-
         return containerFilePath + relativePart;
     } else {
         return path.resolve(inputPath);
@@ -66,50 +65,4 @@ export async function getInputContent(
     }
 
     return { content: inputContent, absoluteDirPath };
-}
-
-/**
- * 从 Markdown / HTML / Frontmatter 中提取所有图片 URL
- */
-export function extractImageUrls(content: string): Set<string> {
-    const urls = new Set<string>();
-
-    // Frontmatter cover
-    // 支持:
-    // cover: ./img.png
-    // cover: "./img.png"
-    // cover: './img.png'
-    const coverRegex = /^\s*cover:\s*(?:["']([^"']+)["']|([^"'\s]+))/gm;
-
-    // Markdown 图片
-    // 支持:
-    // ![](url)
-    // ![](url "title")
-    // ![](url 'title')
-    // ![](<url>)
-    const mdRegex = /!\[[^\]]*]\(\s*(?:<([^>]+)>|([^)\s]+))(?:(?:\s+["'][^"']*["'])?)\s*\)/g;
-
-    // HTML img
-    const htmlRegex = /<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
-
-    // 1. 提取 Frontmatter 中的 cover
-    for (const match of content.matchAll(coverRegex)) {
-        // match[1] 匹配带引号的情况，match[2] 匹配不带引号的情况
-        const url = (match[1] ?? match[2])?.trim();
-        if (url) urls.add(url);
-    }
-
-    // 2. 提取 Markdown 图片
-    for (const match of content.matchAll(mdRegex)) {
-        const url = (match[1] ?? match[2])?.trim();
-        if (url) urls.add(url);
-    }
-
-    // 3. 提取 HTML img
-    for (const match of content.matchAll(htmlRegex)) {
-        const url = match[1]?.trim();
-        if (url) urls.add(url);
-    }
-
-    return urls;
 }

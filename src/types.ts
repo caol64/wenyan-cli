@@ -10,6 +10,7 @@ export interface RenderOptions {
 export interface PublishOptions extends RenderOptions {
     server?: string;
     apiKey?: string;
+    clientVersion?: string;
 }
 
 export class AppError extends Error {

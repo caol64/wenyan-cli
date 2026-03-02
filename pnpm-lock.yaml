@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@wenyan-md/core':
-        specifier: ^2.0.5
-        version: 2.0.5(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
+        specifier: ^2.0.7
+        version: 2.0.7(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -33,6 +33,9 @@ importers:
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
+      '@types/jsdom':
+        specifier: ^27.0.0
+        version: 27.0.0
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
@@ -420,6 +423,9 @@ packages:
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
 
+  '@types/jsdom@27.0.0':
+    resolution: {integrity: sha512-NZyFl/PViwKzdEkQg96gtnB8wm+1ljhdDay9ahn4hgb+SfVtPCbm3TlmDUFXTA+MGN3CijicnMhG18SI5H3rFw==}
+
   '@types/multer@2.0.0':
     resolution: {integrity: sha512-C3Z9v9Evij2yST3RSBktxP9STm6OdMc5uR1xF1SGr98uv8dUlAL2hqwrZ3GVB3uyMyiegnscEK6PGtYvNrjTjw==}
 
@@ -437,6 +443,9 @@ packages:
 
   '@types/serve-static@2.2.0':
     resolution: {integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==}
+
+  '@types/tough-cookie@4.0.5':
+    resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
   '@vitest/expect@4.0.18':
     resolution: {integrity: sha512-8sCWUyckXXYvx4opfzVY03EOiYVxyNrHS5QxX3DAIi5dpJAAkyJezHCP77VMX4HKA2LDT/Jpfo8i2r5BE3GnQQ==}
@@ -467,8 +476,8 @@ packages:
   '@vitest/utils@4.0.18':
     resolution: {integrity: sha512-msMRKLMVLWygpK3u2Hybgi4MNjcYJvwTb0Ru09+fOyCXIgT5raYP041DRRdiJiI3k/2U6SEbAETB3YtBrUkCFA==}
 
-  '@wenyan-md/core@2.0.5':
-    resolution: {integrity: sha512-UpyFY+Ndk51mEZIrli/851P/B1m8GkNphPvushGQjpHPTaC8BTdxHuygoTyBcSObCUq/CvMSebIwLrUAgOdErg==}
+  '@wenyan-md/core@2.0.7':
+    resolution: {integrity: sha512-n4ByB7aJsIgs6RxOUlf6W31tgPMrUl+UQiOmJ8brWrNLSGiMqdpChkxX8DO9kY9PWhj7E8x0lMHrKYoFBjPPdg==}
     peerDependencies:
       form-data-encoder: ^4.1.0
       formdata-node: ^6.0.3
@@ -774,8 +783,8 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
-  js-yaml@3.14.1:
-    resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
+  js-yaml@3.14.2:
+    resolution: {integrity: sha512-PMSmkqxr106Xa156c2M265Z+FTrPl+oxd/rgOQy2tijQeK5TxQ43psO1ZCwhVOSdnn+RzkzlRz/eY4BgJBYVpg==}
     hasBin: true
 
   jsdom@27.4.0:
@@ -794,10 +803,10 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  marked-highlight@2.2.2:
-    resolution: {integrity: sha512-KlHOP31DatbtPPXPaI8nx1KTrG3EW0Z5zewCwpUj65swbtKOTStteK3sNAjBqV75Pgo3fNEVNHeptg18mDuWgw==}
+  marked-highlight@2.2.3:
+    resolution: {integrity: sha512-FCfZRxW/msZAiasCML4isYpxyQWKEEx44vOgdn5Kloae+Qc3q4XR7WjpKKf8oMLk7JP9ZCRd2vhtclJFdwxlWQ==}
     peerDependencies:
-      marked: '>=4 <17'
+      marked: '>=4 <18'
 
   marked@15.0.12:
     resolution: {integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==}
@@ -881,6 +890,9 @@ packages:
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
+
+  parse5@7.3.0:
+    resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
 
   parse5@8.0.0:
     resolution: {integrity: sha512-9m4m5GSgXjL4AjumKzq1Fgfp3Z8rsvjRNbnkVwfu2ImRqE5D0LnY2QfDen18FSY9C573YU5XxSapdHZTZ2WolA==}
@@ -1463,6 +1475,12 @@ snapshots:
 
   '@types/http-errors@2.0.5': {}
 
+  '@types/jsdom@27.0.0':
+    dependencies:
+      '@types/node': 24.3.1
+      '@types/tough-cookie': 4.0.5
+      parse5: 7.3.0
+
   '@types/multer@2.0.0':
     dependencies:
       '@types/express': 5.0.6
@@ -1483,6 +1501,8 @@ snapshots:
     dependencies:
       '@types/http-errors': 2.0.5
       '@types/node': 24.3.1
+
+  '@types/tough-cookie@4.0.5': {}
 
   '@vitest/expect@4.0.18':
     dependencies:
@@ -1523,13 +1543,13 @@ snapshots:
       '@vitest/pretty-format': 4.0.18
       tinyrainbow: 3.0.3
 
-  '@wenyan-md/core@2.0.5(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
+  '@wenyan-md/core@2.0.7(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
     dependencies:
       css-tree: 3.1.0
       front-matter: 4.0.2
       highlight.js: 11.10.0
       marked: 15.0.12
-      marked-highlight: 2.2.2(marked@15.0.12)
+      marked-highlight: 2.2.3(marked@15.0.12)
       mathjax-full: 3.2.2
     optionalDependencies:
       form-data-encoder: 4.1.0
@@ -1779,7 +1799,7 @@ snapshots:
 
   front-matter@4.0.2:
     dependencies:
-      js-yaml: 3.14.1
+      js-yaml: 3.14.2
 
   fsevents@2.3.3:
     optional: true
@@ -1860,7 +1880,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  js-yaml@3.14.1:
+  js-yaml@3.14.2:
     dependencies:
       argparse: 1.0.10
       esprima: 4.0.1
@@ -1899,7 +1919,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  marked-highlight@2.2.2(marked@15.0.12):
+  marked-highlight@2.2.3(marked@15.0.12):
     dependencies:
       marked: 15.0.12
 
@@ -1964,6 +1984,10 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
+
+  parse5@7.3.0:
+    dependencies:
+      entities: 6.0.1
 
   parse5@8.0.0:
     dependencies:

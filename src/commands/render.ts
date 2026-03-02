@@ -1,5 +1,5 @@
 import { configStore, renderStyledContent, StyledContent } from "@wenyan-md/core/wrapper";
-import { getInputContent, getNormalizeFilePath, readStdin } from "../utils.js";
+import { getInputContent, getNormalizeFilePath } from "../utils.js";
 import fs from "node:fs/promises";
 import { AppError, RenderOptions } from "../types.js";
 

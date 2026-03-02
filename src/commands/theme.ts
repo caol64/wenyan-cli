@@ -2,8 +2,9 @@ import { getAllGzhThemes } from "@wenyan-md/core";
 import { getNormalizeFilePath } from "../utils.js";
 import fs from "node:fs/promises";
 import { configStore } from "@wenyan-md/core/wrapper";
+import { AppError } from "../types.js";
 
-interface ThemeOptions {
+export interface ThemeOptions {
     list?: boolean;
     add?: boolean;
     name?: string;
@@ -11,53 +12,51 @@ interface ThemeOptions {
     rm?: string;
 }
 
-export async function themeCommand(options: ThemeOptions) {
-    const { list, add, name, path, rm } = options;
-    if (list) {
-        listThemes();
-        return;
-    }
-    if (add) {
-        await addTheme(name, path);
-        return;
-    }
-    if (rm) {
-        await removeTheme(rm);
-        return;
-    }
+export interface ThemeInfo {
+    id: string;
+    name: string;
+    description?: string;
+    isBuiltin: boolean;
 }
 
-function listThemes() {
+export function listThemes(): ThemeInfo[] {
     const themes = getAllGzhThemes();
-    console.log("\n内置主题：");
-    themes.forEach((theme) => console.log(`- ${theme.meta.id}: ${theme.meta.description}`));
+    const themeList: ThemeInfo[] = themes.map((theme) => {
+        return {
+            id: theme.meta.id,
+            name: theme.meta.name,
+            description: theme.meta.description,
+            isBuiltin: true,
+        };
+    });
     const customThemes = configStore.getThemes();
     if (customThemes.length > 0) {
-        console.log("\n自定义主题：");
         customThemes.forEach((theme) => {
-            console.log(`- ${theme.id}: ${theme.description ?? ""}`);
+            themeList.push({
+                id: theme.id,
+                name: theme.id,
+                description: theme.description,
+                isBuiltin: false,
+            });
         });
     }
-    console.log("");
+    return themeList;
 }
 
-async function addTheme(name?: string, path?: string) {
+export async function addTheme(name?: string, path?: string) {
     if (!name || !path) {
-        console.log("❌ 添加主题时必须提供名称(name)和路径(path)\n");
-        return;
+        throw new AppError("添加主题时必须提供名称(name)和路径(path)");
     }
 
     if (checkThemeExists(name) || checkCustomThemeExists(name)) {
-        console.log(`❌ 主题 "${name}" 已存在\n`);
-        return;
+        throw new AppError(`主题 "${name}" 已存在`);
     }
 
     if (path.startsWith("http")) {
-        console.log(`⏳ 正在从远程获取主题: ${path} ...`);
+        console.log(`正在从远程获取主题: ${path} ...`);
         const response = await fetch(path);
         if (!response.ok) {
-            console.log(`❌ 无法从远程获取主题: ${response.statusText}\n`);
-            return;
+            throw new AppError(`无法从远程获取主题: ${response.statusText}`);
         }
         const content = await response.text();
         configStore.addThemeToConfig(name, content);
@@ -66,20 +65,16 @@ async function addTheme(name?: string, path?: string) {
         const content = await fs.readFile(normalizePath, "utf-8");
         configStore.addThemeToConfig(name, content);
     }
-    console.log(`✅ 主题 "${name}" 已添加\n`);
 }
 
-async function removeTheme(name: string) {
+export async function removeTheme(name: string) {
     if (checkThemeExists(name)) {
-        console.log(`❌ 默认主题 "${name}" 不能删除\n`);
-        return;
+        throw new AppError(`默认主题 "${name}" 不能删除`);
     }
     if (!checkCustomThemeExists(name)) {
-        console.log(`❌ 自定义主题 "${name}" 不存在\n`);
-        return;
+        throw new AppError(`自定义主题 "${name}" 不存在`);
     }
     configStore.deleteThemeFromConfig(name);
-    console.log(`✅ 主题 "${name}" 已删除\n`);
 }
 
 function checkThemeExists(themeId: string): boolean {

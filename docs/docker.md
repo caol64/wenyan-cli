@@ -25,7 +25,7 @@ docker run --rm caol64/wenyan-cli
 
 ```bash
 docker run --rm \
-  --env-file .env \
+  --env-file .env.test \
   -e HOST_FILE_PATH=$(pwd) \
   -v $(pwd):/mnt/host-downloads \
   caol64/wenyan-cli \
@@ -85,11 +85,13 @@ Server 模式适合：
 
 ```bash
 docker run -d \
+  --rm \
   --name wenyan-server \
   -p 3000:3000 \
-  --env-file .env \
+  --env-file .env.test \
   caol64/wenyan-cli \
-  serve
+  serve \
+  --api-key testtest
 ```
 
 ### Server 环境变量示例

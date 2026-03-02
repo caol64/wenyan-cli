@@ -9,6 +9,8 @@ WORKDIR /app
 RUN npm config set registry ${NPM_REGISTRY}
 RUN npm install -g @wenyan-md/cli && npm cache clean --force
 
+EXPOSE 3000
+
 ENTRYPOINT ["wenyan"]
 
 CMD ["--help"]
