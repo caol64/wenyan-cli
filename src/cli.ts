@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { publishCommand } from "./commands/publish.js";
-import { prepareRenderContext } from "./commands/render.js";
 import pkg from "../package.json" with { type: "json" };
-import { addTheme, listThemes, removeTheme, ThemeOptions } from "./commands/theme.js";
-import { PublishOptions, RenderOptions } from "./types.js";
+import {
+    addTheme,
+    ClientPublishOptions,
+    listThemes,
+    prepareRenderContext,
+    removeTheme,
+    renderAndPublish,
+    renderAndPublishToServer,
+    RenderOptions,
+    ThemeOptions,
+} from "@wenyan-md/core/wrapper";
+import { getInputContent } from "./utils.js";
 
-function createProgram(version: string = pkg.version): Command {
+export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
 
     program
@@ -20,7 +28,7 @@ function createProgram(version: string = pkg.version): Command {
     const addCommonOptions = (cmd: Command) => {
         return cmd
             .argument("[input-content]", "markdown content (string input)")
-            .option("-f, --file <path>", "read markdown content from local file")
+            .option("-f, --file <path>", "read markdown content from local file or web URL")
             .option("-t, --theme <theme-id>", "ID of the theme to use", "default")
             .option("-h, --highlight <highlight-theme-id>", "ID of the code highlight theme to use", "solarized-light")
             .option("-c, --custom-theme <path>", "path to custom theme CSS file")
@@ -38,17 +46,16 @@ function createProgram(version: string = pkg.version): Command {
     addCommonOptions(pubCmd)
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
-        .action(async (inputContent: string | undefined, options: PublishOptions) => {
+        .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
             await runCommandWrapper(async () => {
                 // 如果传入了 --server，则走客户端（远程）模式
                 if (options.server) {
                     options.clientVersion = version; // 将 CLI 版本传递给服务器，便于调试和兼容性处理
-                    const { publishClient } = await import("./commands/client.js");
-                    const mediaId = await publishClient(inputContent, options);
+                    const mediaId = await renderAndPublishToServer(inputContent, options, getInputContent);
                     console.log(`发布成功，Media ID: ${mediaId}`);
                 } else {
                     // 走原有的本地直接发布模式
-                    const mediaId = await publishCommand(inputContent, options);
+                    const mediaId = await renderAndPublish(inputContent, options, getInputContent);
                     console.log(`发布成功，Media ID: ${mediaId}`);
                 }
             });
@@ -58,7 +65,7 @@ function createProgram(version: string = pkg.version): Command {
 
     addCommonOptions(renderCmd).action(async (inputContent: string | undefined, options: RenderOptions) => {
         await runCommandWrapper(async () => {
-            const { gzhContent } = await prepareRenderContext(inputContent, options);
+            const { gzhContent } = await prepareRenderContext(inputContent, options, getInputContent);
             console.log(gzhContent.content);
         });
     });
@@ -75,7 +82,7 @@ function createProgram(version: string = pkg.version): Command {
             await runCommandWrapper(async () => {
                 const { list, add, name, path, rm } = options;
                 if (list) {
-                    const themes = listThemes();
+                    const themes = await listThemes();
                     console.log("内置主题：");
                     themes
                         .filter((theme) => theme.isBuiltin)
@@ -89,17 +96,16 @@ function createProgram(version: string = pkg.version): Command {
                             console.log(`- ${theme.id}: ${theme.description ?? ""}`);
                         });
                     }
-                    console.log("");
                     return;
                 }
                 if (add) {
                     await addTheme(name, path);
-                    console.log(`主题 "${name}" 已添加\n`);
+                    console.log(`主题 "${name}" 已添加`);
                     return;
                 }
                 if (rm) {
                     await removeTheme(rm);
-                    console.log(`主题 "${rm}" 已删除\n`);
+                    console.log(`主题 "${rm}" 已删除`);
                 }
             });
         });

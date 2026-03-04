@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createProgram } from "../src/index.js";
+import { createProgram } from "../src/cli.js";
 import { publishCommand } from "../src/commands/publish.js";
 import { prepareRenderContext } from "../src/commands/render.js";
 

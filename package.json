@@ -1,6 +1,6 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
@@ -22,12 +22,6 @@
   "files": [
     "dist"
   ],
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/types/index.d.ts"
-    }
-  },
   "homepage": "https://github.com/caol64/wenyan-cli#readme",
   "repository": {
     "type": "git",
@@ -50,7 +44,7 @@
   },
   "packageManager": "pnpm@10.7.1",
   "dependencies": {
-    "@wenyan-md/core": "^2.0.7",
+    "@wenyan-md/core": "^2.0.8",
     "commander": "^14.0.0",
     "express": "^5.2.1",
     "form-data-encoder": "^4.1.0",
@@ -59,7 +53,6 @@
     "multer": "^2.1.0"
   },
   "devDependencies": {
-    "@types/jsdom": "^27.0.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.0",

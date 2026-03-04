@@ -1,12 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
-import { AppError } from "../types.js";
-import fs from "node:fs";
-import fsPromises from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { configDir } from "@wenyan-md/core/wrapper";
 import multer from "multer";
-import { getNormalizeFilePath } from "../utils.js";
 import { publishToWechatDraft } from "@wenyan-md/core/publish";
 
 export interface ServeOptions {
@@ -24,14 +21,19 @@ interface RenderRequest {
     footnote?: boolean;
 }
 
+class AppError extends Error {
+    constructor(public message: string) {
+        super(message);
+        this.name = "AppError";
+    }
+}
+
 const UPLOAD_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const UPLOAD_DIR = path.join(configDir, "uploads");
 
 export async function serveCommand(options: ServeOptions) {
     // 确保临时目录存在
-    if (!fs.existsSync(UPLOAD_DIR)) {
-        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    }
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
     // 服务启动时立即执行一次后台清理
     cleanupOldUploads();
@@ -98,7 +100,7 @@ export async function serveCommand(options: ServeOptions) {
         validateRequest(body);
 
         // 根据 fileId 去找刚上传的 json 文件并读取内容
-        const files = await fsPromises.readdir(UPLOAD_DIR);
+        const files = await fs.readdir(UPLOAD_DIR);
         const matchedFile = files.find((f) => f === body.fileId);
 
         if (!matchedFile) {
@@ -113,14 +115,16 @@ export async function serveCommand(options: ServeOptions) {
 
         // 找到上传文件并提取文本内容
         const filePath = path.join(UPLOAD_DIR, matchedFile);
-        const fileContent = await fsPromises.readFile(filePath, "utf-8");
+        const fileContent = await fs.readFile(filePath, "utf-8");
         const gzhContent = JSON.parse(fileContent);
+
+        if (!gzhContent.title) throw new AppError("未能找到文章标题");
 
         // 公共的 asset:// 替换逻辑
         const resolveAssetPath = (assetUrl: string) => {
             const assetFileId = assetUrl.replace("asset://", "");
             const matchedAsset = files.find((f) => f === assetFileId || path.parse(f).name === assetFileId);
-            return matchedAsset ? getNormalizeFilePath(path.join(UPLOAD_DIR, matchedAsset)) : assetUrl;
+            return matchedAsset ? path.join(UPLOAD_DIR, matchedAsset) : assetUrl;
         };
 
         // 替换 HTML 内容里的 asset://
@@ -148,7 +152,7 @@ export async function serveCommand(options: ServeOptions) {
                 media_id: data.media_id,
             });
         } else {
-            throw new AppError(`上传失败，\n${data}`);
+            throw new AppError(`发布到微信公众号失败，\n${data}`);
         }
     });
 
@@ -253,14 +257,14 @@ function validateRequest(req: RenderRequest): void {
 
 async function cleanupOldUploads() {
     try {
-        const files = await fsPromises.readdir(UPLOAD_DIR);
+        const files = await fs.readdir(UPLOAD_DIR);
         const now = Date.now();
         for (const file of files) {
             const filePath = path.join(UPLOAD_DIR, file);
             try {
-                const stats = await fsPromises.stat(filePath);
+                const stats = await fs.stat(filePath);
                 if (now - stats.mtimeMs > UPLOAD_TTL_MS) {
-                    await fsPromises.unlink(filePath);
+                    await fs.unlink(filePath);
                 }
             } catch (e) {
                 // 忽略单个文件处理错误
