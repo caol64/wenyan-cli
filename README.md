@@ -154,6 +154,12 @@ flowchart LR
 
 **[Server 模式部署](docs/server.md)**
 
+客户端调用 Server 发布：
+
+```bash
+wenyan publish -f article.md --server https://api.example.com --api-key your-api-key
+```
+
 ## 赞助
 
 如果你觉得文颜对你有帮助，可以给我家猫咪买点罐头 ❤️
