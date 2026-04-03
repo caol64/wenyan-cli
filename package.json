@@ -35,10 +35,11 @@
     "upgrade:core": "pnpm update @wenyan-md/core",
     "prepublishOnly": "pnpm upgrade:core && pnpm build",
     "server": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js serve",
+    "test": "node --import tsx --test",
+    "test:watch": "node --import tsx --test --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --fix",
     "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
-    "test:cli": "vitest run tests/cli.test.ts",
-    "test:render": "vitest run tests/render.test.ts",
-    "test:publish": "vitest run tests/publish.test.ts",
     "test:realPublish": "pnpm build && pnpm dotenv -e .env.test -- node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style",
     "test:serverPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000"
   },
@@ -53,13 +54,13 @@
     "multer": "^2.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.0",
-    "dotenv-cli": "^10.0.0",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.2",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "typescript": "^5.9.2"
   }
 }

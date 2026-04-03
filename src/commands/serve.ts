@@ -266,7 +266,7 @@ async function cleanupOldUploads() {
                 if (now - stats.mtimeMs > UPLOAD_TTL_MS) {
                     await fs.unlink(filePath);
                 }
-            } catch (e) {
+            } catch (_e) {
                 // 忽略单个文件处理错误
             }
         }
