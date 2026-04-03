@@ -1,2 +1,0 @@
-- 为`serve.ts`，`cli.ts`，`utils.ts`编写单元测试。
-- 你可以参考原始`cli.test.ts`的实现，但那个文件是用`vitest`框架编写的，需要修改
