@@ -4,7 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { configDir } from "@wenyan-md/core/wrapper";
 import multer from "multer";
-import { publishToWechatDraft } from "@wenyan-md/core/publish";
+import { publishToWechatDraft } from "@wenyan-md/core/wrapper";
 
 export interface ServeOptions {
     port?: number;
