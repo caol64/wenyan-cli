@@ -57,7 +57,7 @@ wenyan <command> [options]
 
 | 命令      | 说明        |
 | ------- | --------- |
-| [publish](docs/publish.md) | 发布文章      |
+| [publish](docs/publish.md) | 发布文章（支持 `--proxy` 代理）      |
 | render  | 渲染 HTML   |
 | [theme](docs/theme.md)   | 管理主题      |
 | [serve](docs/server.md)   | 启动 Server |

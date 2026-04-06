@@ -46,6 +46,7 @@ export function createProgram(version: string = pkg.version): Command {
     addCommonOptions(pubCmd)
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
+        .option("--proxy <url>", "Proxy URL to use for requests</url>, ex:")
         .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
             await runCommandWrapper(async () => {
                 // 如果传入了 --server，则走客户端（远程）模式
