@@ -40,7 +40,7 @@
     "lint": "eslint . --fix",
     "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
     "test:realPublish": "pnpm build && node --env-file=.env.test ./dist/cli.js publish -f tests/publish.md -t phycat",
-    "test:serverPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000",
+    "test:serverPublish": "pnpm build && node --env-file=.env.test ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000",
     "test:serve": "pnpm build && node --env-file=.env.test ./dist/cli.js serve"
   },
   "packageManager": "pnpm@10.7.1",

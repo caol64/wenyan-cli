@@ -46,10 +46,18 @@ export function createProgram(version: string = pkg.version): Command {
     addCommonOptions(pubCmd)
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
+        .option("--app-id [id]", "WeChat ID to publish to</id>, if not specified, will use the env variable WECHAT_APP_ID")
+        .option("--app-secret [secret]", "WeChat Secret to publish to</secret>, if not specified, will use the env variable WECHAT_APP_SECRET")
         .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
             await runCommandWrapper(async () => {
                 // 如果传入了 --server，则走客户端（远程）模式
                 if (options.server) {
+                    if(!options.appId){
+                        options.appId = process.env.WECHAT_APP_ID;
+                    }
+                    if(!options.appSecret){
+                        options.appSecret = process.env.WECHAT_APP_SECRET;
+                    }
                     options.clientVersion = version; // 将 CLI 版本传递给服务器，便于调试和兼容性处理
                     const mediaId = await renderAndPublishToServer(inputContent, options, getInputContent);
                     console.log(`发布成功，Media ID: ${mediaId}`);

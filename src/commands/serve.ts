@@ -13,6 +13,8 @@ export interface ServeOptions {
 }
 
 interface RenderRequest {
+    appId?: string;
+    appSecret?: string;
     fileId: string;
     theme?: string;
     highlight?: string;
@@ -145,6 +147,9 @@ export async function serveCommand(options: ServeOptions) {
             cover: gzhContent.cover,
             author: gzhContent.author,
             source_url: gzhContent.source_url,
+        },{
+            appId: body.appId,
+            appSecret: body.appSecret
         });
 
         if (data.media_id) {
