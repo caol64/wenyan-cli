@@ -147,6 +147,6 @@ export const program = createProgram();
 
 // 仅在作为主模块运行时执行 parse，防止测试文件 import 时意外触发
 import url from "node:url";
-if (import.meta.url === url.pathToFileURL(process.argv[1]).href) {
+if (import.meta.url && import.meta.url.startsWith(url.pathToFileURL(process.argv[1]).href)) {
     program.parse(process.argv);
 }
