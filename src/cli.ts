@@ -146,7 +146,6 @@ async function runCommandWrapper(action: () => Promise<void>) {
 export const program = createProgram();
 
 // 仅在作为主模块运行时执行 parse，防止测试文件 import 时意外触发
-import url from "node:url";
 if (import.meta.main) {
     program.parse(process.argv);
 }
