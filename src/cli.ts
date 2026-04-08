@@ -11,15 +11,20 @@ import {
     renderAndPublishToServer,
     RenderOptions,
     ThemeOptions,
+    configDir,
+    credentialStore,
 } from "@wenyan-md/core/wrapper";
 import { getInputContent } from "./utils.js";
+import path from "node:path";
+import input from "@inquirer/input";
+import password from "@inquirer/password";
 
 export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
 
     program
         .name("wenyan")
-        .description("A CLI for WenYan Markdown Render.")
+        .description("CLI for WenYan - A Markdown render and publisher tool.")
         .version(version, "-v, --version", "output the current version")
         .action(() => {
             program.outputHelp();
@@ -40,10 +45,11 @@ export function createProgram(version: string = pkg.version): Command {
 
     const pubCmd = program
         .command("publish")
-        .description("Render a markdown file to styled HTML and publish to wechat GZH");
+        .description("Render a markdown file to styled HTML and publish to wechat MP platform");
 
     // 先添加公共选项，再追加 publish 专属选项
     addCommonOptions(pubCmd)
+        .option("--app-id <appId>", "AppID for the WeChat MP platform")
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
         .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
@@ -79,6 +85,10 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--path <path>", "Path to the new custom theme CSS file")
         .option("--rm <name>", "Name of the custom theme to remove")
         .action(async (options: ThemeOptions) => {
+            if (Object.keys(options).length === 0) {
+                program.commands.find((c) => c.name() === "theme")?.outputHelp();
+                return;
+            }
             await runCommandWrapper(async () => {
                 const { list, add, name, path, rm } = options;
                 if (list) {
@@ -124,6 +134,40 @@ export function createProgram(version: string = pkg.version): Command {
                 console.error(error.message);
                 process.exit(1);
             }
+        });
+
+    program
+        .command("credential")
+        .description("Manage wechat credentials (e.g. AppID and AppSecret)")
+        .option("-l, --location", "Get the storage location of configuration credentials")
+        .option("-s, --set", "Interactively set the wechat credentials (AppID & AppSecret)")
+        .action(async (options: { location?: boolean; set?: boolean }) => {
+            if (Object.keys(options).length === 0) {
+                program.commands.find((c) => c.name() === "credential")?.outputHelp();
+                return;
+            }
+            await runCommandWrapper(async () => {
+                if (options.location) {
+                    console.log(path.join(configDir, "credential.json"));
+                    return;
+                }
+                if (options.set) {
+                    console.log("请输入微信公众号的开发者凭据：");
+                    const appId = await input({
+                        message: "AppID:",
+                        validate: (value) => value.trim().length > 0 || "AppID 不能为空",
+                    });
+
+                    const appSecret = await password({
+                        message: "AppSecret:",
+                        mask: true,
+                        validate: (value) => value.trim().length > 0 || "AppSecret 不能为空",
+                    });
+
+                    await credentialStore.saveWechatCredential(appId.trim(), appSecret.trim());
+                    console.log("微信凭据已安全保存！");
+                }
+            });
         });
 
     return program;

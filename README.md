@@ -60,6 +60,7 @@ wenyan <command> [options]
 | [publish](docs/publish.md) | 发布文章      |
 | render  | 渲染 HTML   |
 | [theme](docs/theme.md)   | 管理主题      |
+| [credential](docs/credential.md)   | 配置公众号凭据 |
 | [serve](docs/server.md)   | 启动 Server |
 
 ## 概念
@@ -159,6 +160,19 @@ flowchart LR
 ```bash
 wenyan publish -f article.md --server https://api.example.com --api-key your-api-key
 ```
+
+## 多公众号发布（进阶）
+
+如果你需要发布到多个公众号，请按照如下步骤操作：
+
+- 删除环境变量中的`WECHAT_APP_ID`和`WECHAT_APP_SECRET`
+- 按照[文档](docs/credential.md)配置多个公众号凭据（如果是`server`模式，在`server`端配置）
+- 在执行`wenyan publish`命令时，添加一个参数`--app-id your-app-id`，参考[文档](docs/publish.md)
+- 重要：每个公众号都需要配置白名单
+
+> [!INFO]
+>
+> 不使用`server`模式也能正常使用多公众号发布功能，但强烈建议搭配`server`模式使用。
 
 ## 赞助
 

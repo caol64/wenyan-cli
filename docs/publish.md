@@ -156,6 +156,7 @@ wenyan publish \
 | --custom-theme | -c | 自定义主题 CSS（本地或 URL） | 否  | -               |
 | --no-mac-style | -  | 禁用代码块 Mac 风格       | 否  | 启用              |
 | --no-footnote  | -  | 禁用脚注转换             | 否  | 启用              |
+| --app-id       | -  | 需要发布的公众号 AppId   | 否  | -               |
 | --server       | -  | Wenyan Server 地址   | 否  | -               |
 | --api-key      | -  | Server API Key     | 否² | -               |
 | --help         | -  | 查看帮助               | 否  | -               |
@@ -213,6 +214,16 @@ wenyan publish \
 cat article.md | wenyan publish
 ```
 
+### 使用指定 AppId 发布
+
+```bash
+wenyan publish \
+  -f article.md \
+  --app-id your-app-id \
+  --server https://api.wenyan.dev \
+  --api-key your-api-key
+```
+
 ## 常见问题
 
 ### 图片上传失败
@@ -241,8 +252,11 @@ WECHAT_APP_ID
 WECHAT_APP_SECRET
 ```
 
+如果配置了多公众号发布，使用`wenyan credential -l`命令，查看凭据中是否正确配置了`AppId`和`AppSecret`。
+
 ## 相关命令
 
 * `wenyan render`：仅渲染 HTML，不发布
 * `wenyan serve`：启动 Server
 * `wenyan theme`：管理主题
+* `wenyan credential`：管理凭据

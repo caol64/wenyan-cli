@@ -19,6 +19,7 @@ interface RenderRequest {
     customTheme?: string;
     macStyle?: boolean;
     footnote?: boolean;
+    appId?: string;
 }
 
 class AppError extends Error {
@@ -139,13 +140,18 @@ export async function serveCommand(options: ServeOptions) {
             gzhContent.cover = resolveAssetPath(gzhContent.cover);
         }
 
-        const data = await publishToWechatDraft({
-            title: gzhContent.title,
-            content: gzhContent.content,
-            cover: gzhContent.cover,
-            author: gzhContent.author,
-            source_url: gzhContent.source_url,
-        });
+        const data = await publishToWechatDraft(
+            {
+                title: gzhContent.title,
+                content: gzhContent.content,
+                cover: gzhContent.cover,
+                author: gzhContent.author,
+                source_url: gzhContent.source_url,
+            },
+            {
+                appId: body.appId,
+            },
+        );
 
         if (data.media_id) {
             res.json({
