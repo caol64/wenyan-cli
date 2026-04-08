@@ -3,85 +3,60 @@ name: "apply-wechat-custom-theme"
 description: "AI-ready skill to test, register, and publish Markdown articles to WeChat Official Accounts using a local custom CSS theme via Wenyan CLI."
 ---
 
-# 微信公众号自定义主题应用与发布工具 (WeChat Custom Theme Applier)
+# 微信公众号自定义主题应用工具 (WeChat Custom Theme Applier)
 
-这是一个专门为 AI Agent 设计的技能，用于将本地已经生成好的自定义 CSS 主题文件，应用到 Markdown 文章中，并通过 `wenyan-cli` 进行本地测试预览、主题库注册以及最终推送到微信公众号草稿箱。
+这是一个专门为 AI Agent 设计的技能，用于将本地生成的自定义 CSS 主题应用到 Markdown 文章中。它支持通过 `wenyan-cli` 进行本地预览、主题注册以及一键推送到微信公众号草稿箱。
 
-## 前置依赖
+## 前置要求
 
-- 必须已安装 `wenyan-cli`：`npm install -g @wenyan-md/cli`
-- 执行发布命令前，环境中必须已配置 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 环境变量。
-- 本地必须已存在一个目标 Markdown 文件（如 `article.md`）。
-- 本地必须已存在一个目标 CSS 主题文件（如 `custom-theme.css`，通常由 `generate-wechat-css-theme` 技能生成）。
+- **环境配置**：必须设置 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 环境变量。
+- **依赖工具**：已安装 `wenyan-cli` (`pnpm add -g @wenyan-md/cli`)。
+- **必要文件**：本地已存在 Markdown 文件 (`.md`) 和 CSS 主题文件 (`.css`)。
+
+## 核心能力
+
+- **本地测试渲染**：在发布前验证 CSS 样式的正确性。
+- **一键发布草稿**：直接应用本地 CSS 将文章推送到公众号草稿箱。
+- **主题持久化**：将优秀的自定义主题注册到 `wenyan-cli` 主题库中，方便后续调用。
 
 ## AI Agent 指令指南：工作流 SOP
 
-当用户要求“使用刚才生成的 `xxx.css` 主题，把 `yyy.md` 发布到公众号”时，Agent **必须** 遵循以下标准操作流程（SOP）：
+当用户要求“应用生成的 `xxx.css` 并发布 `yyy.md`”时，Agent **必须** 遵循以下标准操作流程：
 
-### Step 1: 测试渲染 (Render Test)[强制第一步]
+### Step 1: 测试渲染 (Render Test) [强制]
 
-在正式发布或注册主题之前，Agent 必须先在本地进行一次模拟渲染，以验证 CSS 文件是否存在且没有导致严重的编译错误。
+在正式发布前，必须先进行模拟渲染，以确保 CSS 语法正确且文件路径有效。
 
 - **命令**：
     ```bash
     wenyan render -f <markdown_file_path> -c <css_file_path>
     ```
-- **示例**：
-    ```bash
-    wenyan render -f my_post.md -c ./cyber-dark-theme.css
-    ```
-- **动作校验**：如果该命令成功输出了一长串带有 `<div id="wenyan">` 的 HTML 字符串，说明 CSS 注入和 Markdown 解析均正常。如果报错，Agent 需要停止流程并向用户报告错误。
+- **验证**：如果输出包含 `<div id="wenyan">` 的 HTML 字符串且无报错，则说明正常。
 
 ### Step 2: 正式发布 (Publish to Draft)
 
-如果测试渲染通过，Agent 可以直接使用该临时 CSS 文件，将文章推送到微信公众号的草稿箱。
+测试通过后，使用该 CSS 文件将文章推送到微信公众号草稿箱。
 
-- **核心命令 (一次性应用临时 CSS)**：
-    使用 `-c` 或 `--custom-theme` 参数指定本地 CSS 文件的路径。此参数的优先级高于内置主题（`-t`）。
+- **命令**：
     ```bash
     wenyan publish -f <markdown_file_path> -c <css_file_path>
     ```
-- **示例**：
-    ```bash
-    wenyan publish -f my_post.md -c ./cyber-dark-theme.css
-    ```
-- **可选参数搭配**：
-    - 关闭代码块 Mac 风格窗口：`--no-mac-style`
-    - 指定特定的代码高亮主题（如深色主题搭配深色代码块）：`-h atom-one-dark`
+- **可选参数**：
+    - `--no-mac-style`：禁用代码块 Mac 风格窗口。
+    - `-h <highlight_theme>`：指定代码高亮主题（如 `atom-one-dark`）。
 
-### Step 3: 注册为永久主题 (Register Theme) [可选，由用户触发]
+### Step 3: 注册主题 (Register Theme) [按需]
 
-如果用户明确表示“我很喜欢这个主题，以后还要用它”，Agent 应将该临时 CSS 文件注册到 `wenyan-cli` 的内部主题库中。
+如果用户表示需要长期使用该主题，应将其注册到本地主题库。
 
 - **命令**：
     ```bash
     wenyan theme --add --name <theme_name> --path <css_file_path>
     ```
-- **示例**：
-    ```bash
-    wenyan theme --add --name cyberpunk --path ./cyber-dark-theme.css
-    ```
-- **后续使用**：注册成功后，后续发布此文章或其他文章时，就可以抛弃本地的 `.css` 文件，直接使用简写的 `-t` 参数调用了：
-    ```bash
-    wenyan publish -f another_post.md -t cyberpunk
-    ```
-
-### Step 4: 主题库管理 (Theme Management) [按需使用]
-
-Agent 可以使用以下命令帮助用户管理已注册的主题：
-
-- **查看所有可用主题（包括内置和已注册的自定义主题）**：
-    ```bash
-    wenyan theme -l
-    ```
-- **删除不再需要的自定义主题**：
-    ```bash
-    wenyan theme --rm <theme_name>
-    ```
+- **后续调用**：注册后可直接使用 `-t <theme_name>` 参数发布。
 
 ## 故障排除 (Agent 专用)
 
-- **Error: missing input-content (no argument, no stdin, and no file)**：Agent 忘记使用 `-f` 指定 Markdown 文件路径。
-- **Error: ENOENT: no such file or directory, open 'xxx.css'**：指定的 CSS 文件路径不存在。Agent 需要检查前一个技能生成的 CSS 文件名和路径是否与当前命令匹配。
-- **发布后排版错乱/未生效**：通常是因为 CSS 文件中的选择器没有以 `#wenyan` 开头，导致被微信底层过滤掉。Agent 应提示用户检查 CSS 源码。
-- **微信 API 报错 (如 invalid credential)**：提示用户检查环境变量 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 是否正确配置。
+- **文件不存在**：检查 `ENOENT` 报错，确认 Markdown 或 CSS 文件路径是否正确。
+- **样式未生效**：检查 CSS 选择器是否缺少 `#wenyan` 前缀。
+- **凭证错误**：如果微信 API 返回 `invalid credential`，提示用户检查 `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET` 环境变量。
