@@ -96,6 +96,30 @@ describe("utils.ts", () => {
             assert.equal(result.absoluteDirPath, undefined);
         });
 
+        it("should handle stdin timeout gracefully", async () => {
+            const mockStdin = new PassThrough();
+            (mockStdin as any).isTTY = false;
+            Object.defineProperty(process, "stdin", { value: mockStdin, configurable: true });
+
+            // 不写入任何数据，也不结束流，模拟没有输入的情况
+            const promise = getInputContent(undefined, "/tmp/test-fallback.md");
+            
+            // 等待足够长的时间让超时触发（100ms + 一些缓冲）
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // 现在写入文件内容作为后备
+            await fs.writeFile("/tmp/test-fallback.md", "File content fallback", "utf-8");
+            
+            // 由于 stdin 超时返回 null，应该回退到文件读取
+            // 但此时文件还不存在，所以会抛出错误
+            await assert.rejects(promise, {
+                code: "ENOENT",
+            });
+            
+            // 清理
+            await fs.unlink("/tmp/test-fallback.md").catch(() => {});
+        });
+
         it("should prioritize stdin over file when both are available", async () => {
             const mockStdin = new PassThrough();
             (mockStdin as any).isTTY = false;

@@ -2,8 +2,52 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { getNormalizeFilePath } from "@wenyan-md/core/wrapper";
 
-export function readStdin(): Promise<string> {
-    return readStream(process.stdin);
+export function readStdin(timeoutMs = 100): Promise<string | null> {
+    return new Promise((resolve) => {
+        let data = "";
+        let resolved = false;
+        const stream = process.stdin;
+
+        stream.setEncoding?.("utf8");
+
+        const onData = (chunk: string) => (data += chunk);
+        const onEnd = () => {
+            if (!resolved) {
+                resolved = true;
+                cleanup();
+                resolve(data || null);
+            }
+        };
+        const onError = () => {
+            if (!resolved) {
+                resolved = true;
+                cleanup();
+                resolve(null);
+            }
+        };
+
+        // 超时处理：如果在指定时间内没有收到 end 事件，认为没有输入
+        const timeout = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                cleanup();
+                resolve(null);
+            }
+        }, timeoutMs);
+
+        const cleanup = () => {
+            clearTimeout(timeout);
+            stream.removeListener("data", onData);
+            stream.removeListener("end", onEnd);
+            stream.removeListener("error", onError);
+        };
+
+        stream.on("data", onData);
+        stream.on("end", onEnd);
+        stream.on("error", onError);
+
+        stream.resume?.();
+    });
 }
 
 export async function readStream(stream: NodeJS.ReadableStream): Promise<string> {
@@ -42,9 +86,12 @@ export async function getInputContent(
 ): Promise<{ content: string; absoluteDirPath: string | undefined }> {
     let absoluteDirPath: string | undefined = undefined;
 
-    // 1. 尝试从 Stdin 读取
+    // 1. 尝试从 Stdin 读取（带超时保护）
     if (!inputContent && !process.stdin.isTTY) {
-        inputContent = await readStdin();
+        const stdinContent = await readStdin(100);
+        if (stdinContent) {
+            inputContent = stdinContent;
+        }
     }
 
     // 2. 尝试从文件读取
