@@ -170,7 +170,7 @@ wenyan publish -f article.md --server https://api.example.com --api-key your-api
 - 在执行`wenyan publish`命令时，添加一个参数`--app-id your-app-id`，参考[文档](docs/publish.md)
 - 重要：每个公众号都需要配置白名单
 
-> [!INFO]
+> [!NOTE]
 >
 > 不使用`server`模式也能正常使用多公众号发布功能，但强烈建议搭配`server`模式使用。
 
