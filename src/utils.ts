@@ -3,61 +3,42 @@ import fs from "node:fs/promises";
 import { getNormalizeFilePath } from "@wenyan-md/core/wrapper";
 
 export function readStdin(): Promise<string> {
+    process.stdin.setEncoding("utf8"); // windows中文版可能有问题
     return readStream(process.stdin);
 }
 
-export async function readStream(stream: NodeJS.ReadableStream): Promise<string> {
-    return new Promise((resolve, reject) => {
-        let data = "";
-
-        stream.setEncoding?.("utf8");
-
-        const onData = (chunk: string) => (data += chunk);
-        const onEnd = () => {
-            cleanup();
-            resolve(data);
-        };
-        const onError = (err: Error) => {
-            cleanup();
-            reject(err);
-        };
-
-        const cleanup = () => {
-            stream.removeListener("data", onData);
-            stream.removeListener("end", onEnd);
-            stream.removeListener("error", onError);
-        };
-
-        stream.on("data", onData);
-        stream.on("end", onEnd);
-        stream.on("error", onError);
-
-        stream.resume?.();
-    });
+async function readStream(stream: NodeJS.ReadableStream): Promise<string> {
+    const chunks: string[] = [];
+    for await (const chunk of stream) {
+        chunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+    }
+    return chunks.join("");
 }
 
 export async function getInputContent(
     inputContent?: string,
     file?: string,
 ): Promise<{ content: string; absoluteDirPath: string | undefined }> {
-    let absoluteDirPath: string | undefined = undefined;
-
-    // 1. 尝试从 Stdin 读取
-    if (!inputContent && !process.stdin.isTTY) {
-        inputContent = await readStdin();
+    // 优先级 1：直接传入的内存数据（最高优先级，直接返回）
+    if (inputContent) {
+        return { content: inputContent, absoluteDirPath: undefined };
     }
 
-    // 2. 尝试从文件读取
-    if (!inputContent && file) {
+    // 优先级 2：用户指定了文件
+    if (file) {
         const normalizePath = getNormalizeFilePath(file);
-        inputContent = await fs.readFile(normalizePath, "utf-8");
-        absoluteDirPath = path.dirname(normalizePath);
+        const content = await fs.readFile(normalizePath, "utf-8");
+        return { content, absoluteDirPath: path.dirname(normalizePath) };
     }
 
-    // 3. 校验输入
-    if (!inputContent) {
-        throw new Error("missing input-content (no argument, no stdin, and no file).");
+    // 优先级 3：管道方式，尝试读取标准输入流
+    if (!process.stdin.isTTY) {
+        // 注意，如果 stdin 没有数据，可能会导致程序挂起，不做处理，参考 cat 命令不带任何参数时的行为
+        const content = await readStdin();
+        if (content) {
+            return { content, absoluteDirPath: undefined };
+        }
     }
 
-    return { content: inputContent, absoluteDirPath };
+    throw new Error("missing input-content (no argument, no stdin, and no file).");
 }
