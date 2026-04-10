@@ -42,6 +42,11 @@ describe("CLI Argument Parsing", () => {
         assert.ok(commands.includes("serve"));
     });
 
+    it("should have credential command", () => {
+        const commands = program.commands.map((cmd) => cmd.name());
+        assert.ok(commands.includes("credential"));
+    });
+
     it("should display help when no command is provided", async () => {
         const args = ["node", "wenyan"];
 

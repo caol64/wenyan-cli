@@ -1,7 +1,8 @@
 import { describe, it, mock, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import http from "node:http";
-import { serveCommand } from "../src/commands/serve.js";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { serveCommand, UPLOAD_DIR } from "../src/commands/serve.js";
 
 describe("serve.ts", () => {
     const testPort = 3999; // 使用非常用端口避免冲突
@@ -25,49 +26,49 @@ describe("serve.ts", () => {
 
         mock.restoreAll();
 
+        process.removeAllListeners("SIGTERM");
+        process.removeAllListeners("SIGINT");
+
         // 等待一小段时间确保端口释放
         await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    function makeRequest(
+    async function makeRequest(
         method: string,
         endpoint: string,
         options: { headers?: Record<string, string>; body?: any } = {},
     ): Promise<{ statusCode: number | undefined; body: any }> {
-        return new Promise((resolve, reject) => {
-            const url = new URL(endpoint, baseUrl);
-            const requestOptions: http.RequestOptions = {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                    ...options.headers,
-                },
-            };
+        const url = new URL(endpoint, baseUrl).toString();
 
-            const req = http.request(url, requestOptions, (res) => {
-                let data = "";
-                res.on("data", (chunk) => (data += chunk));
-                res.on("end", () => {
-                    try {
-                        const body = JSON.parse(data);
-                        resolve({ statusCode: res.statusCode, body });
-                    } catch (error) {
-                        resolve({ statusCode: res.statusCode, body: data });
-                    }
-                });
-            });
+        // 构造 fetch 参数
+        const fetchOptions: RequestInit = {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                ...options.headers,
+            },
+        };
 
-            req.on("error", reject);
-
-            if (options.body) {
-                if (typeof options.body === "string") {
-                    req.write(options.body);
-                } else {
-                    req.write(JSON.stringify(options.body));
-                }
+        // 处理 body
+        if (options.body !== undefined) {
+            if (typeof options.body === "string") {
+                fetchOptions.body = options.body;
+            } else {
+                fetchOptions.body = JSON.stringify(options.body);
             }
+        }
 
-            req.end();
+        return fetch(url, fetchOptions).then(async (res) => {
+            const statusCode = res.status;
+            try {
+                // 尝试解析 JSON
+                const body = await res.json();
+                return { statusCode, body };
+            } catch {
+                // 解析失败返回原始文本
+                const body = await res.text();
+                return { statusCode, body };
+            }
         });
     }
 
@@ -154,7 +155,7 @@ describe("serve.ts", () => {
             const { statusCode, body: responseBody } = await makeRequest("POST", "/upload", {
                 headers: {
                     "Content-Type": `multipart/form-data; boundary=${boundary}`,
-                    "Content-Length": Buffer.byteLength(bodyStr).toString()
+                    "Content-Length": Buffer.byteLength(bodyStr).toString(),
                 },
                 body: bodyStr,
             });
@@ -163,9 +164,114 @@ describe("serve.ts", () => {
             assert.equal(statusCode, 400);
             assert.ok(responseBody.desc.includes("未找到上传的文件") || responseBody.desc.includes("Unexpected"));
         });
+
+        it("should upload a valid markdown file and verify it exists on disk", async () => {
+            mock.method(console, "log", mock.fn());
+            serverProcess = serveCommand({ port: testPort });
+            baseUrl = `http://localhost:${testPort}`;
+            await new Promise((r) => setTimeout(r, 200));
+
+            const boundary = "----testboundary";
+            const body = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.md"\r\nContent-Type: text/markdown\r\n\r\n# hello\r\n\r\n--${boundary}--\r\n`;
+
+            const { statusCode, body: resBody } = await makeRequest("POST", "/upload", {
+                headers: {
+                    "Content-Type": `multipart/form-data; boundary=${boundary}`,
+                },
+                body,
+            });
+
+            // 1. 接口返回校验
+            assert.equal(statusCode, 200);
+            assert.ok(resBody.success);
+            assert.ok(resBody.data.fileId);
+
+            // 2. ✅ 核心：去磁盘真实校验文件是否存在
+            const uploadedFile = path.join(UPLOAD_DIR, resBody.data.fileId);
+            const exists = await fs
+                .access(uploadedFile)
+                .then(() => true)
+                .catch(() => false);
+            assert.ok(exists, "上传的文件应该真实存在于磁盘上");
+
+            // 3. ✅ 测试完主动删除，不留临时文件
+            await fs.unlink(uploadedFile).catch(() => {});
+        });
+
+        it("should reject unsupported file type", async () => {
+            mock.method(console, "log", mock.fn());
+            serverProcess = serveCommand({ port: testPort });
+            baseUrl = `http://localhost:${testPort}`;
+            await new Promise((r) => setTimeout(r, 200));
+
+            const boundary = "----testboundary";
+            const body = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.exe"\r\nContent-Type: application/octet-stream\r\n\r\nxxx\r\n--${boundary}--\r\n`;
+
+            const { statusCode, body: resBody } = await makeRequest("POST", "/upload", {
+                headers: { "Content-Type": `multipart/form-data; boundary=${boundary}` },
+                body,
+            });
+
+            assert.equal(statusCode, 400);
+            assert.ok(resBody.desc.includes("不支持的文件类型"));
+        });
     });
 
     describe("Publish Endpoint", () => {
+        // it("should accept valid JSON and proceed to publish flow", async () => {
+        //     mock.method(console, "log", () => {});
+
+        //     // 模拟真实的 publishToWechatDraft，避免真调用微信
+        //     const core = await import("@wenyan-md/core/wrapper");
+        //     const mockPublish = mock.method(core, "publishToWechatDraft", async () => ({
+        //         media_id: "mock-media-id-123",
+        //     }));
+
+        //     serverProcess = serveCommand({ port: testPort });
+        //     baseUrl = `http://localhost:${testPort}`;
+        //     await new Promise((resolve) => setTimeout(resolve, 200));
+
+        //     // 1. 构造合法的文章 JSON
+        //     const articleJson = JSON.stringify({
+        //         title: "测试文章",
+        //         content: "<p>测试内容</p>",
+        //         author: "测试作者",
+        //         source_url: "https://example.com",
+        //     });
+
+        //     // 2. 上传这个 JSON 文件
+        //     const boundary = "----testupload";
+        //     const body = [
+        //         `--${boundary}`,
+        //         `Content-Disposition: form-data; name="file"; filename="article.json"`,
+        //         `Content-Type: application/json`,
+        //         ``,
+        //         articleJson,
+        //         `--${boundary}--`,
+        //     ].join("\r\n");
+
+        //     const uploadRes = await makeRequest("POST", "/upload", {
+        //         headers: {
+        //             "Content-Type": `multipart/form-data; boundary=${boundary}`,
+        //         },
+        //         body,
+        //     });
+
+        //     assert.equal(uploadRes.statusCode, 200);
+        //     const fileId = uploadRes.body.data.fileId;
+
+        //     // 3. 调用发布接口
+        //     const publishRes = await makeRequest("POST", "/publish", {
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify({ fileId }),
+        //     });
+
+        //     // 4. 断言成功
+        //     assert.equal(publishRes.statusCode, 200);
+        //     assert.equal(publishRes.body.media_id, "mock-media-id-123");
+        //     assert.equal(mockPublish.mock.callCount(), 1);
+        // });
+
         it("should reject publish without fileId", async () => {
             mock.method(console, "log", mock.fn());
 
@@ -214,6 +320,28 @@ describe("serve.ts", () => {
 
             assert.equal(statusCode, 400);
             assert.equal(body.code, -1);
+        });
+    });
+
+    describe("API Key Protection", () => {
+        it("should reject /upload without api key", async () => {
+            mock.method(console, "log", mock.fn());
+            serverProcess = serveCommand({ port: testPort, apiKey: testApiKey });
+            baseUrl = `http://localhost:${testPort}`;
+            await new Promise((r) => setTimeout(r, 200));
+
+            const { statusCode } = await makeRequest("POST", "/upload");
+            assert.equal(statusCode, 401);
+        });
+
+        it("should reject /publish without api key", async () => {
+            mock.method(console, "log", mock.fn());
+            serverProcess = serveCommand({ port: testPort, apiKey: testApiKey });
+            baseUrl = `http://localhost:${testPort}`;
+            await new Promise((r) => setTimeout(r, 200));
+
+            const { statusCode } = await makeRequest("POST", "/publish");
+            assert.equal(statusCode, 401);
         });
     });
 

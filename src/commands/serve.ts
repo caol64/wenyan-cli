@@ -30,7 +30,7 @@ class AppError extends Error {
 }
 
 const UPLOAD_TTL_MS = 10 * 60 * 1000; // 10 minutes
-const UPLOAD_DIR = path.join(configDir, "uploads");
+export const UPLOAD_DIR = path.join(configDir, "uploads");
 
 export async function serveCommand(options: ServeOptions) {
     // 确保临时目录存在
