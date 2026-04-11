@@ -159,6 +159,7 @@ wenyan publish \
 | --app-id       | -  | 需要发布的公众号 AppId   | 否  | -               |
 | --server       | -  | Wenyan Server 地址   | 否  | -               |
 | --api-key      | -  | Server API Key     | 否² | -               |
+| --proxy        | -  | 代理服务器地址           | 否  | -               |
 | --help         | -  | 查看帮助               | 否  | -               |
 
 说明：
@@ -170,6 +171,46 @@ wenyan publish \
 * 直接传入 Markdown 内容
 
 ² 仅在指定 `--server` 时生效。
+
+### 代理配置说明
+
+`--proxy` 参数支持以下格式的代理服务器：
+
+- **HTTP 代理**: `http://127.0.0.1:7890`
+- **HTTPS 代理**: `https://127.0.0.1:7890`
+- **SOCKS5 代理**: `socks5://127.0.0.1:1080`
+- **SOCKS4 代理**: `socks4://127.0.0.1:1080`
+
+**使用示例：**
+
+```bash
+# 使用 HTTP 代理
+wenyan publish -f article.md --proxy http://127.0.0.1:7890
+
+# 使用 SOCKS5 代理
+wenyan publish -f article.md --proxy socks5://127.0.0.1:1080
+```
+
+**或者使用环境变量（推荐）：**
+
+```bash
+# Windows PowerShell
+$env:HTTP_PROXY="http://127.0.0.1:7890"
+wenyan publish -f article.md
+
+# Linux/Mac
+export HTTP_PROXY=http://127.0.0.1:7890
+wenyan publish -f article.md
+
+# 使用 SOCKS5 代理
+export ALL_PROXY=socks5://127.0.0.1:1080
+wenyan publish -f article.md
+```
+
+> [!NOTE]
+> 
+> 代理配置会应用于所有微信 API 调用和图片上传操作。
+> 如果使用认证代理，格式为：`http://username:password@proxy-server:port`
 
 ## 示例
 

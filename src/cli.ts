@@ -18,7 +18,7 @@ import { getInputContent } from "./utils.js";
 import path from "node:path";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
-
+import dotenv from "dotenv";
 export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
 
@@ -52,8 +52,17 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--app-id <appId>", "AppID for the WeChat MP platform")
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
+        .option("--env-file <file>", "Path to a .env file to load environment variables from</file>")
+        .option("--proxy <url>", "Proxy URL to use for requests</url>, ex: http://127.0.0.1:1080")
         .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
             await runCommandWrapper(async () => {
+
+                 // 1. 读取环境变量
+                if(options.envFile){
+                    dotenv.config({ path: options.envFile });
+                }
+
+
                 // 如果传入了 --server，则走客户端（远程）模式
                 if (options.server) {
                     options.clientVersion = version; // 将 CLI 版本传递给服务器，便于调试和兼容性处理
