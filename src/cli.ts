@@ -16,6 +16,7 @@ import {
 } from "@wenyan-md/core/wrapper";
 import { getInputContent } from "./utils.js";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
 import { loadEnvFile } from "node:process";
@@ -227,6 +228,17 @@ async function setupProxy(proxyUrl?: string) {
 export const program = createProgram();
 
 // 仅在作为主模块运行时执行 parse，防止测试文件 import 时意外触发
-if (import.meta.main) {
+// import.meta.main 在 Node.js >= 22.18.0 中可用，旧版本通过路径比较回退检测
+function isMainModule(): boolean {
+    if (import.meta.main !== undefined) return import.meta.main;
+    if (!process.argv[1]) return false;
+    try {
+        return fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+    } catch {
+        return false;
+    }
+}
+
+if (isMainModule()) {
     program.parse(process.argv);
 }
