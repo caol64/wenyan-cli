@@ -18,7 +18,13 @@ import { getInputContent } from "./utils.js";
 import path from "node:path";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
-import dotenv from "dotenv";
+import { loadEnvFile } from "node:process";
+
+interface CLIPublishOptions extends ClientPublishOptions {
+    proxy?: string;
+    envFile?: string;
+}
+
 export function createProgram(version: string = pkg.version): Command {
     const program = new Command();
 
@@ -52,16 +58,17 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--app-id <appId>", "AppID for the WeChat MP platform")
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
-        .option("--env-file <file>", "Path to a .env file to load environment variables from</file>")
-        .option("--proxy <url>", "Proxy URL to use for requests</url>, ex: http://127.0.0.1:1080")
-        .action(async (inputContent: string | undefined, options: ClientPublishOptions) => {
+        .option("--env-file <file>", "Path to a .env file to load environment variables from")
+        .option("--proxy <url>", "Proxy URL to use for requests, ex: http://127.0.0.1:1080")
+        .action(async (inputContent: string | undefined, options: CLIPublishOptions) => {
             await runCommandWrapper(async () => {
-
-                 // 1. 读取环境变量
-                if(options.envFile){
-                    dotenv.config({ path: options.envFile });
+                // 读取环境变量文件（如果提供了 --env-file 选项）
+                if (options.envFile) {
+                    loadEnvFile(options.envFile);
                 }
 
+                // 设置代理（如果提供了 --proxy 选项）
+                await setupProxy(options.proxy);
 
                 // 如果传入了 --server，则走客户端（远程）模式
                 if (options.server) {
@@ -134,8 +141,13 @@ export function createProgram(version: string = pkg.version): Command {
         .description("Start a server to provide HTTP API for rendering and publishing")
         .option("-p, --port <port>", "Port to listen on (default: 3000)", "3000")
         .option("--api-key <apiKey>", "API key for authentication")
-        .action(async (options: { port?: string; apiKey?: string }) => {
+        .option("--env-file <file>", "Path to a .env file to load environment variables from")
+        .action(async (options: { port?: string; apiKey?: string; envFile?: string }) => {
             try {
+                // 读取环境变量文件（如果提供了 --env-file 选项）
+                if (options.envFile) {
+                    loadEnvFile(options.envFile);
+                }
                 const { serveCommand } = await import("./commands/serve.js");
                 const port = options.port ? parseInt(options.port, 10) : 3000;
                 await serveCommand({ port, version, apiKey: options.apiKey });
@@ -194,6 +206,22 @@ async function runCommandWrapper(action: () => Promise<void>) {
         }
         process.exit(1);
     }
+}
+
+async function setupProxy(proxyUrl?: string) {
+    const url = proxyUrl
+        || process.env.HTTPS_PROXY
+        || process.env.https_proxy
+        || process.env.HTTP_PROXY
+        || process.env.http_proxy
+        || process.env.ALL_PROXY;
+    if (!url) return;
+    const { ProxyAgent, setGlobalDispatcher, install } = await import("undici");
+    const cleanUrl = url.trim();
+    const agent = new ProxyAgent(cleanUrl);
+    setGlobalDispatcher(agent);
+    install();
+    console.error(`[Proxy] Global fetch proxy enabled: ${cleanUrl}`);
 }
 
 export const program = createProgram();

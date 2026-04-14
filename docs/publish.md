@@ -160,6 +160,7 @@ wenyan publish \
 | --server       | -  | Wenyan Server 地址   | 否  | -               |
 | --api-key      | -  | Server API Key     | 否² | -               |
 | --proxy        | -  | 代理服务器地址           | 否  | -               |
+| --env-file     | -  | 指定环境变量配置文件（如 .env.local）           | 否  | -               |
 | --help         | -  | 查看帮助               | 否  | -               |
 
 说明：
@@ -173,44 +174,39 @@ wenyan publish \
 ² 仅在指定 `--server` 时生效。
 
 ### 代理配置说明
+`--proxy` 支持 HTTP/HTTPS/SOCKS4/SOCKS5 代理，也可通过环境变量配置，代理会作用于所有微信 API 调用与图片上传。
 
-`--proxy` 参数支持以下格式的代理服务器：
-
-- **HTTP 代理**: `http://127.0.0.1:7890`
-- **HTTPS 代理**: `https://127.0.0.1:7890`
-- **SOCKS5 代理**: `socks5://127.0.0.1:1080`
-- **SOCKS4 代理**: `socks4://127.0.0.1:1080`
-
-**使用示例：**
-
+**常用格式：**
 ```bash
-# 使用 HTTP 代理
-wenyan publish -f article.md --proxy http://127.0.0.1:7890
-
-# 使用 SOCKS5 代理
-wenyan publish -f article.md --proxy socks5://127.0.0.1:1080
+http://127.0.0.1:7890
+https://127.0.0.1:7890
+socks4://127.0.0.1:1080
+socks5://127.0.0.1:1080
 ```
 
-**或者使用环境变量（推荐）：**
-
+**命令行使用：**
 ```bash
-# Windows PowerShell
-$env:HTTP_PROXY="http://127.0.0.1:7890"
-wenyan publish -f article.md
+wenyan publish -f article.md --proxy http://127.0.0.1:7890
+```
 
+**环境变量（推荐）：**
+```bash
 # Linux/Mac
 export HTTP_PROXY=http://127.0.0.1:7890
-wenyan publish -f article.md
-
-# 使用 SOCKS5 代理
 export ALL_PROXY=socks5://127.0.0.1:1080
-wenyan publish -f article.md
+
+# Windows PowerShell
+$env:HTTP_PROXY="http://127.0.0.1:7890"
 ```
 
 > [!NOTE]
-> 
-> 代理配置会应用于所有微信 API 调用和图片上传操作。
-> 如果使用认证代理，格式为：`http://username:password@proxy-server:port`
+>
+> `--env-file` 可指定自定义环境变量文件。
+
+**带认证代理：**
+```
+http://username:password@proxy-server:port
+```
 
 ## 示例
 
@@ -286,12 +282,16 @@ wenyan publish \
 
 ### 发布失败：invalid appid or secret
 
-请检查环境变量：
+请检查环境变量中是否存在如下配置：
 
 ```bash
 WECHAT_APP_ID
 WECHAT_APP_SECRET
 ```
+
+> [!NOTE]
+>
+> `--env-file` 可指定自定义环境变量文件。
 
 如果配置了多公众号发布，使用`wenyan credential -l`命令，查看凭据中是否正确配置了`AppId`和`AppSecret`。
 

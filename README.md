@@ -61,7 +61,7 @@ wenyan <command> [options]
 
 | 命令      | 说明        |
 | ------- | --------- |
-| [publish](docs/publish.md) | 发布文章（支持 `--proxy` 代理）      |
+| [publish](docs/publish.md) | 发布文章      |
 | render  | 渲染 HTML   |
 | [theme](docs/theme.md)   | 管理主题      |
 | [credential](docs/credential.md)   | 配置公众号凭据 |
@@ -84,10 +84,14 @@ wenyan <command> [options]
 
 > [!IMPORTANT]
 >
-> 请确保运行文颜的机器已配置如下环境变量，否则上传接口将调用失败。
+> 请确保运行文颜的机器已配置如下环境变量，否则上传接口[`wenyan publish`]将调用失败。
 
 -   `WECHAT_APP_ID`
 -   `WECHAT_APP_SECRET`
+
+> [!NOTE]
+>
+> 你可以通过`--env-file=.env`的方式配置环境变量。
 
 ### 微信公众号 IP 白名单
 
@@ -96,6 +100,10 @@ wenyan <command> [options]
 > 请确保运行文颜的机器 IP 已加入微信公众号后台的 IP 白名单，否则上传接口将调用失败。
 
 配置说明文档：[https://yuzhi.tech/docs/wenyan/upload](https://yuzhi.tech/docs/wenyan/upload)
+
+> [!NOTE]
+>
+> 你可以通过`server`模式或者[添加代理](docs/publish.md)两种方式解决 IP 频繁变动的问题。
 
 ### 文章格式
 
