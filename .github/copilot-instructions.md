@@ -22,7 +22,7 @@
 - This repository is a thin TypeScript CLI/server layer over `@wenyan-md/core/wrapper`. Rendering, theme management, credential storage, and WeChat publishing are mostly delegated to the core package; repo-local logic mainly handles command wiring, input resolution, and the HTTP server wrapper.
 - `src/cli.ts` is the real entrypoint. It defines the `publish`, `render`, `theme`, `serve`, and `credential` commands with Commander, exports `createProgram()` for tests, and only calls `program.parse()` behind `import.meta.main`.
 - `src/utils.ts` centralizes content ingestion. Input precedence is **inline argument > file/URL via `--file` > stdin**. File input is normalized with `getNormalizeFilePath()` and returns `absoluteDirPath` so core rendering can resolve relative assets correctly.
-- `src/commands/serve.ts` implements the remote publish server used by `wenyan publish --server ...`. The flow is:
+- `src/commands/serve.ts` implements the remote publish server used by `wenyan publish --serve ...`. The flow is:
   1. `/upload` accepts Markdown, CSS, JSON, and image files into `configDir/uploads`
   2. clients reference uploaded assets via `asset://...`
   3. `/publish` loads an uploaded JSON render payload, rewrites `asset://` references back to temp files, and calls `publishToWechatDraft()`

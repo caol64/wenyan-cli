@@ -1,40 +1,41 @@
 # AGENTS.md
 
-## Project Context
-This is a modern Node.js backend/CLI project using **TypeScript**. 
-It utilizes `tsx` for seamless TypeScript execution and the **native Node.js Test Runner** (`node:test`) for testing. 
-This project uses the `pnpm` package manager and `package.json` for dependency management and configuration. The target Node.js version is >= 20. All commands must be run using `pnpm` or `node`.
+## Build, test, and lint
 
-## Agent Instructions
-When working on this project, the agent **MUST** adhere to the following rules:
+- Use `pnpm` for all package management and repo scripts.
+- Install dependencies: `pnpm install`
+- Lint: `pnpm run lint`
+- Type-check: `pnpm run typecheck`
+- Build: `pnpm run build`
+- Full test suite: `pnpm run test`
+- Watch tests: `pnpm run test:watch`
+- Run one test file: `pnpm exec node --import tsx --test tests/serve.test.ts`
+- Run one test by name: `pnpm exec node --import tsx --test --test-name-pattern "should return health status" tests/serve.test.ts`
+- CLI/manual smoke flows already scripted in `package.json`:
+  - `pnpm run test:bin`
+  - `pnpm run test:serve`
+  - `pnpm run test:serverPublish`
+  - `pnpm run test:realPublish`
 
-- **ALWAYS** use `pnpm <command>` instead of invoking `npm`, `yarn`, or other tools directly for package management.
-- **NEVER** use `npm install` or `yarn install`.
-- **ALWAYS** run `pnpm install` to install/update dependencies after changes to `package.json`.
-- **ALWAYS** run quality checks (`format`, `lint`, `test`) before proposing any changes.
-- **MAINTAIN** existing code formatting and style, primarily enforced by `eslint` and `prettier` (or `biome` if configured).
-- **PREFER** using modern ESM syntax (`import`/`export`) over CommonJS (`require`).
-- **USE** `tsx` to execute TypeScript files directly during development.
-- **USE** the native `node:test` and `node:assert` modules for writing tests. DO NOT introduce Jest or Vitest unless explicitly requested.
+## High-level architecture
 
-## Useful Commands (for the AI Agent)
+- This repository is a thin TypeScript CLI/server layer over `@wenyan-md/core/wrapper`. Rendering, theme management, credential storage, and WeChat publishing are mostly delegated to the core package; repo-local logic mainly handles command wiring, input resolution, and the HTTP server wrapper.
+- `src/cli.ts` is the real entrypoint. It defines the `publish`, `render`, `theme`, `serve`, and `credential` commands with Commander, exports `createProgram()` for tests, and only calls `program.parse()` behind `import.meta.main`.
+- `src/utils.ts` centralizes content ingestion. Input precedence is **inline argument > file/URL via `--file` > stdin**. File input is normalized with `getNormalizeFilePath()` and returns `absoluteDirPath` so core rendering can resolve relative assets correctly.
+- `src/commands/serve.ts` implements the remote publish server used by `wenyan publish --serve ...`. The flow is:
+  1. `/upload` accepts Markdown, CSS, JSON, and image files into `configDir/uploads`
+  2. clients reference uploaded assets via `asset://...`
+  3. `/publish` loads an uploaded JSON render payload, rewrites `asset://` references back to temp files, and calls `publishToWechatDraft()`
+- The project supports both direct local publish and client-server publish. Local mode calls WeChat APIs from the CLI process; server mode pushes render/publish work to a remote Express server to avoid local IP whitelist issues.
 
-- **Install dependencies**: `pnpm install`
-- **Run a script directly**: `pnpm exec tsx src/index.ts`
-- **Run tests**: `pnpm run test` (Executes `node --import tsx --test tests/`)
-- **Run tests in watch mode**: `pnpm run test:watch`
-- **Run linting**: `pnpm run lint`
-- **Run type checking**: `pnpm run typecheck` (Executes `tsc --noEmit`)
-- **Build project**: `pnpm run build` (Compiles TS to JS in `dist/` directory)
-- **Add a new package**: `pnpm add <package-name>`
-- **Add a dev dependency**: `pnpm add -D <package-name>`
-- **Remove a package**: `pnpm remove <package-name>`
+## Key conventions
 
-## Project Structure
-- `src/`: Contains all application-level TypeScript code.
-- `agents/`: Contains AI agent operational logs, learnings, errors, and task records for self-improvement and context management.
-- `tests/`: Contains all unit and integration tests (using `node:test`).
-- `dist/` or `build/`: The output directory for compiled JavaScript (ignored in git).
-- `package.json`: The main configuration and dependency file.
-- `tsconfig.json`: TypeScript compiler configuration.
-- `AGENTS.md`: This file, providing context and instructions.
+- Keep the codebase in ESM TypeScript (`"type": "module"`, `moduleResolution: "NodeNext"`). Prefer `import`/`export`, not CommonJS.
+- Preserve the current error-handling split:
+  - CLI commands should go through the shared `runCommandWrapper()` pattern and exit with code 1 on failure.
+  - Server routes should throw `AppError` for expected client errors so the shared JSON error shape stays `{ code: -1, desc }`.
+- Preserve user-facing Chinese success/error messages unless there is a strong reason to change them. Tests assert on specific Chinese output and error text.
+- When adding input-related behavior, keep the existing precedence rules and do not break stdin-based usage for CI/CD pipelines.
+- Server uploads are temporary and live under `configDir/uploads` with a 10-minute TTL cleanup job. Features that rely on uploaded files should fit that lifecycle instead of introducing permanent storage here.
+- Publishing assumes Wenyan article metadata conventions from the README: Markdown frontmatter should provide at least `title`, with optional `cover`, `author`, and `source_url`. WeChat publishing also depends on `WECHAT_APP_ID` and `WECHAT_APP_SECRET` unless credentials are managed through the CLI/server credential flow.
+- Tests use the native Node test runner (`node:test`) plus `node:assert/strict` and `mock`. Follow the existing style instead of introducing Jest/Vitest.
