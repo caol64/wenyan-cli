@@ -15,8 +15,8 @@ importers:
         specifier: ^5.0.11
         version: 5.0.11(@types/node@24.3.1)
       '@wenyan-md/core':
-        specifier: ^3.0.5
-        version: 3.0.5(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
+        specifier: ^3.0.6
+        version: 3.0.6(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -477,8 +477,8 @@ packages:
     resolution: {integrity: sha512-XJ9UD9+bbDo4a4epraTwG3TsNPeiB9aShrUneAVXy8q4LuwowN+qu89/6ByLMINqvIMeI9H9hOHQtg/ijrYXzQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@wenyan-md/core@3.0.5':
-    resolution: {integrity: sha512-zrMgIo3iGKhOEqLl7gZWG5XkGSIKxS2pepe0Uebm3Vm7DKD+6RgWDRRtPOGDrfEIl3UEjfpDTm7iJw+XdHlWIg==}
+  '@wenyan-md/core@3.0.6':
+    resolution: {integrity: sha512-V+rY3z5nquxHbRcUuKniFv0shCykPfwSmYC+ggwkXBi+P1ubawjBoaNFONt8R3rff/DqCqKre/yf97TJip41vw==}
     peerDependencies:
       form-data-encoder: ^4.1.0
       formdata-node: ^6.0.3
@@ -1655,7 +1655,7 @@ snapshots:
       '@typescript-eslint/types': 8.58.0
       eslint-visitor-keys: 5.0.1
 
-  '@wenyan-md/core@3.0.5(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
+  '@wenyan-md/core@3.0.6(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
     dependencies:
       css-tree: 3.2.1
       front-matter: 4.0.2

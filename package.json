@@ -1,6 +1,6 @@
 {
   "name": "@wenyan-md/cli",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "A CLI tool for Wenyan markdown rendering & publishing",
   "author": "Lei <caol64@gmail.com> (https://github.com/caol64)",
   "license": "Apache-2.0",
@@ -41,6 +41,7 @@
     "cli": "tsx ./src/cli.ts",
     "test:bin": "pnpm build && node ./dist/cli.js render -f tests/publish.md -c tests/manhua.css --no-mac-style",
     "test:realPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -t phycat --env-file=.env.test",
+    "test:realImagePublish": "pnpm build && node ./dist/cli.js publish -f tests/image_publish.md --env-file=.env.test",
     "test:serverPublish": "pnpm build && node ./dist/cli.js publish -f tests/publish.md -c tests/manhua.css --no-mac-style --server http://localhost:3000",
     "test:serve": "pnpm build && node ./dist/cli.js serve --env-file=.env.test"
   },
@@ -48,7 +49,7 @@
   "dependencies": {
     "@inquirer/input": "^5.0.11",
     "@inquirer/password": "^5.0.11",
-    "@wenyan-md/core": "^3.0.5",
+    "@wenyan-md/core": "^3.0.6",
     "commander": "^14.0.0",
     "express": "^5.2.1",
     "form-data-encoder": "^4.1.0",

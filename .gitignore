@@ -4,3 +4,4 @@ dist/
 *.log
 .env*
 *.tsbuildinfo
+.github/copilot-instructions.md

@@ -2,9 +2,9 @@ import express, { Request, Response, NextFunction } from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { configDir } from "@wenyan-md/core/wrapper";
+import { configDir, publishToWechatDraft, publishImageTextToWechatDraft } from "@wenyan-md/core/wrapper";
 import multer from "multer";
-import { publishToWechatDraft, publishImageTextToWechatDraft } from "@wenyan-md/core/wrapper";
+import { WechatPublishResponse } from "@wenyan-md/core/wechat";
 
 export interface ServeOptions {
     port?: number;
@@ -148,7 +148,7 @@ export async function serveCommand(options: ServeOptions) {
             });
         }
 
-        let data;
+        let data: WechatPublishResponse;
         if (gzhContent.image_list && gzhContent.image_list.length > 0) {
             // 图片文章（小绿书）
             data = await publishImageTextToWechatDraft(

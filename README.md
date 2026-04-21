@@ -140,6 +140,24 @@ source_url: http://
 
 - 当前文章的相对路径（如：`./assets/image.png`）
 
+### 发布图片消息（小绿书）
+
+发布图片消息与发布图文消息唯一的区别在于`frontmatter`的一个参数`image_list`：
+
+```md
+---
+title: 人勤春来早, 读书正当时
+image_list:
+  - ./1.jpeg
+  - ./2.jpeg
+  - ./3.jpeg
+  - ./4.jpeg
+  - ./5.jpeg
+---
+```
+
+`image_list`最多20张，首张即为封面，
+
 ## Server 模式
 
 相较于纯本地运行的**本地模式（Local Mode）**，`wenyan-cli`还提供了 **远程客户端模式（Client–Server Mode）**。两种模式运行效果完全一致，你可以根据运行环境和网络条件选择最合适的方式。
