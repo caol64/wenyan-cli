@@ -4,7 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { configDir } from "@wenyan-md/core/wrapper";
 import multer from "multer";
-import { publishToWechatDraft } from "@wenyan-md/core/wrapper";
+import { publishToWechatDraft, publishImageTextToWechatDraft } from "@wenyan-md/core/wrapper";
 
 export interface ServeOptions {
     port?: number;
@@ -140,20 +140,46 @@ export async function serveCommand(options: ServeOptions) {
             gzhContent.cover = resolveAssetPath(gzhContent.cover);
         }
 
-        const data = await publishToWechatDraft(
-            {
-                title: gzhContent.title,
-                content: gzhContent.content,
-                cover: gzhContent.cover,
-                author: gzhContent.author,
-                source_url: gzhContent.source_url,
-                need_open_comment: gzhContent.need_open_comment,
-                only_fans_can_comment: gzhContent.only_fans_can_comment,
-            },
-            {
-                appId: body.appId,
-            },
-        );
+        // 替换 image_list 中的 asset://
+        if (gzhContent.image_list && Array.isArray(gzhContent.image_list)) {
+            gzhContent.image_list = gzhContent.image_list.map((img: string) => {
+                if (img.startsWith("asset://")) return resolveAssetPath(img);
+                return img;
+            });
+        }
+
+        let data;
+        if (gzhContent.image_list && gzhContent.image_list.length > 0) {
+            // 图片文章（小绿书）
+            data = await publishImageTextToWechatDraft(
+                {
+                    title: gzhContent.title,
+                    content: gzhContent.content,
+                    images: gzhContent.image_list,
+                    cover: gzhContent.cover,
+                    author: gzhContent.author,
+                },
+                {
+                    appId: body.appId,
+                },
+            );
+        } else {
+            // 普通图文文章
+            data = await publishToWechatDraft(
+                {
+                    title: gzhContent.title,
+                    content: gzhContent.content,
+                    cover: gzhContent.cover,
+                    author: gzhContent.author,
+                    source_url: gzhContent.source_url,
+                    need_open_comment: gzhContent.need_open_comment,
+                    only_fans_can_comment: gzhContent.only_fans_can_comment,
+                },
+                {
+                    appId: body.appId,
+                },
+            );
+        }
 
         if (data.media_id) {
             res.json({
