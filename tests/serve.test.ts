@@ -218,59 +218,110 @@ describe("serve.ts", () => {
     });
 
     describe("Publish Endpoint", () => {
-        // it("should accept valid JSON and proceed to publish flow", async () => {
-        //     mock.method(console, "log", () => {});
+        it("should forward comment options from uploaded json to publishToWechatDraft", async () => {
+            mock.method(console, "log", mock.fn());
 
-        //     // 模拟真实的 publishToWechatDraft，避免真调用微信
-        //     const core = await import("@wenyan-md/core/wrapper");
-        //     const mockPublish = mock.method(core, "publishToWechatDraft", async () => ({
-        //         media_id: "mock-media-id-123",
-        //     }));
+            const previousAppId = process.env.WECHAT_APP_ID;
+            const previousAppSecret = process.env.WECHAT_APP_SECRET;
+            process.env.WECHAT_APP_ID = "test-app-id";
+            process.env.WECHAT_APP_SECRET = "test-app-secret";
 
-        //     serverProcess = serveCommand({ port: testPort });
-        //     baseUrl = `http://localhost:${testPort}`;
-        //     await new Promise((resolve) => setTimeout(resolve, 200));
+            try {
+                const publishModule = await import("@wenyan-md/core/publish");
+                mock.method(publishModule.WechatPublisher.prototype, "getAccessTokenWithCache", async () => "mock-access-token");
+                mock.method(
+                    publishModule.WechatPublisher.prototype,
+                    "uploadImage",
+                    async () => ({
+                        media_id: "mock-upload-media-id",
+                        url: "https://mmbiz.qpic.cn/mock-uploaded-image",
+                    }),
+                );
+                const publishDraftMock = mock.method(
+                    publishModule.WechatPublisher.prototype,
+                    "publishToDraft",
+                    async () => ({ media_id: "mock-media-id-123" }),
+                );
 
-        //     // 1. 构造合法的文章 JSON
-        //     const articleJson = JSON.stringify({
-        //         title: "测试文章",
-        //         content: "<p>测试内容</p>",
-        //         author: "测试作者",
-        //         source_url: "https://example.com",
-        //     });
+                serverProcess = serveCommand({ port: testPort });
+                baseUrl = `http://localhost:${testPort}`;
+                await new Promise((resolve) => setTimeout(resolve, 200));
 
-        //     // 2. 上传这个 JSON 文件
-        //     const boundary = "----testupload";
-        //     const body = [
-        //         `--${boundary}`,
-        //         `Content-Disposition: form-data; name="file"; filename="article.json"`,
-        //         `Content-Type: application/json`,
-        //         ``,
-        //         articleJson,
-        //         `--${boundary}--`,
-        //     ].join("\r\n");
+                const imageBoundary = "----testimageupload";
+                const imageBody = [
+                    `--${imageBoundary}`,
+                    `Content-Disposition: form-data; name="file"; filename="cover.png"`,
+                    `Content-Type: image/png`,
+                    "",
+                    "fake-image-content",
+                    `--${imageBoundary}--`,
+                ].join("\r\n");
 
-        //     const uploadRes = await makeRequest("POST", "/upload", {
-        //         headers: {
-        //             "Content-Type": `multipart/form-data; boundary=${boundary}`,
-        //         },
-        //         body,
-        //     });
+                const imageUploadRes = await makeRequest("POST", "/upload", {
+                    headers: {
+                        "Content-Type": `multipart/form-data; boundary=${imageBoundary}`,
+                    },
+                    body: imageBody,
+                });
 
-        //     assert.equal(uploadRes.statusCode, 200);
-        //     const fileId = uploadRes.body.data.fileId;
+                assert.equal(imageUploadRes.statusCode, 200);
+                const imageFileId = imageUploadRes.body.data.fileId;
 
-        //     // 3. 调用发布接口
-        //     const publishRes = await makeRequest("POST", "/publish", {
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify({ fileId }),
-        //     });
+                const articleJson = JSON.stringify({
+                    title: "测试文章",
+                    content: `<p>测试内容</p><img src="asset://${imageFileId}" />`,
+                    author: "测试作者",
+                    source_url: "https://example.com",
+                    need_open_comment: 1,
+                    only_fans_can_comment: 1,
+                });
 
-        //     // 4. 断言成功
-        //     assert.equal(publishRes.statusCode, 200);
-        //     assert.equal(publishRes.body.media_id, "mock-media-id-123");
-        //     assert.equal(mockPublish.mock.callCount(), 1);
-        // });
+                const articleBoundary = "----testarticleupload";
+                const articleBody = [
+                    `--${articleBoundary}`,
+                    `Content-Disposition: form-data; name="file"; filename="article.json"`,
+                    `Content-Type: application/json`,
+                    "",
+                    articleJson,
+                    `--${articleBoundary}--`,
+                ].join("\r\n");
+
+                const uploadRes = await makeRequest("POST", "/upload", {
+                    headers: {
+                        "Content-Type": `multipart/form-data; boundary=${articleBoundary}`,
+                    },
+                    body: articleBody,
+                });
+
+                assert.equal(uploadRes.statusCode, 200);
+                const fileId = uploadRes.body.data.fileId;
+
+                const publishRes = await makeRequest("POST", "/publish", {
+                    body: { fileId, appId: "test-app-id" },
+                });
+
+                assert.equal(publishRes.statusCode, 200);
+                assert.equal(publishRes.body.media_id, "mock-media-id-123");
+                assert.equal(publishDraftMock.mock.callCount(), 1);
+
+                const publishOptions = publishDraftMock.mock.calls[0].arguments[1];
+                assert.ok(publishOptions);
+                assert.equal(publishOptions.need_open_comment, 1);
+                assert.equal(publishOptions.only_fans_can_comment, 1);
+            } finally {
+                if (previousAppId === undefined) {
+                    delete process.env.WECHAT_APP_ID;
+                } else {
+                    process.env.WECHAT_APP_ID = previousAppId;
+                }
+
+                if (previousAppSecret === undefined) {
+                    delete process.env.WECHAT_APP_SECRET;
+                } else {
+                    process.env.WECHAT_APP_SECRET = previousAppSecret;
+                }
+            }
+        });
 
         it("should reject publish without fileId", async () => {
             mock.method(console, "log", mock.fn());
