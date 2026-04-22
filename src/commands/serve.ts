@@ -149,36 +149,40 @@ export async function serveCommand(options: ServeOptions) {
         }
 
         let data: WechatPublishResponse;
-        if (gzhContent.image_list && gzhContent.image_list.length > 0) {
-            // 图片文章（小绿书）
-            data = await publishImageTextToWechatDraft(
-                {
-                    title: gzhContent.title,
-                    content: gzhContent.content,
-                    images: gzhContent.image_list,
-                    cover: gzhContent.cover,
-                    author: gzhContent.author,
-                },
-                {
-                    appId: body.appId,
-                },
-            );
-        } else {
-            // 普通图文文章
-            data = await publishToWechatDraft(
-                {
-                    title: gzhContent.title,
-                    content: gzhContent.content,
-                    cover: gzhContent.cover,
-                    author: gzhContent.author,
-                    source_url: gzhContent.source_url,
-                    need_open_comment: gzhContent.need_open_comment,
-                    only_fans_can_comment: gzhContent.only_fans_can_comment,
-                },
-                {
-                    appId: body.appId,
-                },
-            );
+        try {
+            if (gzhContent.image_list && gzhContent.image_list.length > 0) {
+                // 图片文章（小绿书）
+                data = await publishImageTextToWechatDraft(
+                    {
+                        title: gzhContent.title,
+                        content: gzhContent.content,
+                        images: gzhContent.image_list,
+                        cover: gzhContent.cover,
+                        author: gzhContent.author,
+                    },
+                    {
+                        appId: body.appId,
+                    },
+                );
+            } else {
+                // 普通图文文章
+                data = await publishToWechatDraft(
+                    {
+                        title: gzhContent.title,
+                        content: gzhContent.content,
+                        cover: gzhContent.cover,
+                        author: gzhContent.author,
+                        source_url: gzhContent.source_url,
+                        need_open_comment: gzhContent.need_open_comment,
+                        only_fans_can_comment: gzhContent.only_fans_can_comment,
+                    },
+                    {
+                        appId: body.appId,
+                    },
+                );
+            }
+        } catch (err) {
+            throw wrapPublishError(err);
         }
 
         if (data.media_id) {
@@ -243,6 +247,27 @@ export async function serveCommand(options: ServeOptions) {
     });
 }
 
+/**
+ * 将 @wenyan-md/core 抛出的 Error 转换为用户友好的 AppError，
+ * 使其在 serve 模式下返回 400 而非 500，并改善错误提示。
+ */
+function wrapPublishError(err: unknown): AppError {
+    if (err instanceof AppError) return err;
+
+    const msg = err instanceof Error ? err.message : String(err);
+
+    // 路径无法解析（相对路径或跨平台路径在服务器上不存在）
+    if (msg.includes("InputPath must be an absolute path")) {
+        const pathMatch = msg.match(/'([^']+)'/);
+        const badPath = pathMatch ? pathMatch[1] : "";
+        return new AppError(
+            `无法解析图片路径 '${badPath}'。请确保图片已通过 /upload 接口上传（使用 asset:// 链接），或使用 http/https 网络图片。`,
+        );
+    }
+
+    return new AppError(msg);
+}
+
 function errorHandler(error: any, _req: Request, res: Response, next: NextFunction): void {
     if (res.headersSent) {
         return next(error);
@@ -256,7 +281,7 @@ function errorHandler(error: any, _req: Request, res: Response, next: NextFuncti
     const statusCode = isAppError || isMulterError ? 400 : 500;
 
     if (statusCode === 500) {
-        console.error("[Server Error]:", error);
+        console.error("[Server Error]:", message);
     }
 
     res.status(statusCode).json({
