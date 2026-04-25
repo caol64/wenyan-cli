@@ -49,7 +49,7 @@
   "dependencies": {
     "@inquirer/input": "^5.0.11",
     "@inquirer/password": "^5.0.11",
-    "@wenyan-md/core": "^3.0.6",
+    "@wenyan-md/core": "^3.0.7",
     "commander": "^14.0.0",
     "express": "^5.2.1",
     "form-data-encoder": "^4.1.0",

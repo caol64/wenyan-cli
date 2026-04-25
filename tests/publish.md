@@ -59,6 +59,21 @@ $$
   \end{pmatrix}
 $$
 
+```mermaid
+graph TD
+A-->B
+```
+
+```mermaid
+flowchart LR
+    CLI[Wenyan CLI] --> Wechat[公众号 API]
+```
+
+```mermaid
+flowchart LR
+    CLI[Wenyan CLI] --> Server[Wenyan Server] --> Wechat[公众号 API]
+```
+
 ### 待解决
 
 - $a^2 + b^2 = c^2$ : aaa
