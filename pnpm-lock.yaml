@@ -15,8 +15,8 @@ importers:
         specifier: ^5.0.11
         version: 5.0.11(@types/node@24.3.1)
       '@wenyan-md/core':
-        specifier: ^3.0.7
-        version: 3.0.7(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
+        specifier: ^3.0.8
+        version: 3.0.8(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -609,8 +609,8 @@ packages:
   '@upsetjs/venn.js@2.0.0':
     resolution: {integrity: sha512-WbBhLrooyePuQ1VZxrJjtLvTc4NVfpOyKx0sKqioq9bX1C1m7Jgykkn8gLrtwumBioXIqam8DLxp88Adbue6Hw==}
 
-  '@wenyan-md/core@3.0.7':
-    resolution: {integrity: sha512-m4E+Vg9odM1n3IDIqFaeezKkeRFBi7L8JtcY6CladKoLnx6PMAZjyNJ1YrD1Dxp6whna74umI5KY09KP2rKagA==}
+  '@wenyan-md/core@3.0.8':
+    resolution: {integrity: sha512-dvpvmd5mubuJD220RJ/L7Kteo6R1vRwCG9c4GUGnigh/k3V/8VNPIqjZ6vaG0479SngqL7Zai9HiGd3zB3nJiw==}
     peerDependencies:
       form-data-encoder: ^4.1.0
       formdata-node: ^6.0.3
@@ -2249,7 +2249,7 @@ snapshots:
       d3-selection: 3.0.0
       d3-transition: 3.0.1(d3-selection@3.0.0)
 
-  '@wenyan-md/core@3.0.7(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
+  '@wenyan-md/core@3.0.8(form-data-encoder@4.1.0)(formdata-node@6.0.3)(jsdom@27.4.0)':
     dependencies:
       css-tree: 3.2.1
       front-matter: 4.0.2

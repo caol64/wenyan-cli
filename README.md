@@ -140,7 +140,7 @@ source_url: http://
 
 - 当前文章的相对路径（如：`./assets/image.png`）
 
-### 发布图片消息（小绿书）
+## 发布图片消息（小绿书）
 
 发布图片消息与发布图文消息唯一的区别在于`frontmatter`的一个参数`image_list`：
 
@@ -203,6 +203,10 @@ wenyan publish -f article.md --server https://api.example.com --api-key your-api
 > [!NOTE]
 >
 > 不使用`server`模式也能正常使用多公众号发布功能，但强烈建议搭配`server`模式使用。
+
+## 导入公众号 AccessToken（进阶）
+
+当你有多个系统共用一个公众号、希望只有一个系统统一管理 AccessToken 时，可以将外部 AccessToken 导入给文颜。参考[文档](docs/token.md)。
 
 ## 赞助
 

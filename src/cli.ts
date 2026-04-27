@@ -13,6 +13,7 @@ import {
     ThemeOptions,
     configDir,
     credentialStore,
+    wechatPublisher,
 } from "@wenyan-md/core/wrapper";
 import { getInputContent } from "./utils.js";
 import path from "node:path";
@@ -186,8 +187,48 @@ export function createProgram(version: string = pkg.version): Command {
                         validate: (value) => value.trim().length > 0 || "AppSecret 不能为空",
                     });
 
-                    await credentialStore.saveWechatCredential(appId.trim(), appSecret.trim());
+                    const alias = await input({
+                        message: "别名 (用于简化 AppID ，按回车跳过):",
+                        validate: (value) => true, // Alias is optional, so always return true
+                    });
+
+                    await credentialStore.saveWechatCredential(appId.trim(), appSecret.trim(), alias.trim() || null);
                     console.log("微信凭据已安全保存！");
+                }
+            });
+        });
+
+    program
+        .command("token")
+        .description("Manage wechat accessToken")
+        .option("-l, --location", "Get the storage location of access token")
+        .option("-i, --import", "Import an external access token (disables auto-refresh)")
+        .option("--app-id <appId>", "WeChat AppID")
+        .option("--token <token>", "External Access Token")
+        .action(async (options: { location?: boolean; import?: boolean; appId?: string; token?: string }) => {
+            if (Object.keys(options).length === 0) {
+                program.commands.find((c) => c.name() === "token")?.outputHelp();
+                return;
+            }
+            await runCommandWrapper(async () => {
+                if (options.location) {
+                    console.log(path.join(configDir, "token.json"));
+                    return;
+                }
+                if (options.import) {
+                    const { appId, token } = options;
+
+                    // 参数必填校验
+                    if (!appId || !token) {
+                        console.error("导入 Token 时必须同时提供 --app-id 和 --token 参数。");
+                        process.exit(1);
+                    }
+
+
+                    await wechatPublisher.setExternalToken(appId, token);
+
+                    console.log(`成功导入 AppID [${appId}] 的外部 Token。`);
+                    console.log("提示: 该 Token 的 expireAt 已设为 -1，Wenyan 将不再管理其生命周期。");
                 }
             });
         });
@@ -210,12 +251,13 @@ async function runCommandWrapper(action: () => Promise<void>) {
 }
 
 async function setupProxy(proxyUrl?: string) {
-    const url = proxyUrl
-        || process.env.HTTPS_PROXY
-        || process.env.https_proxy
-        || process.env.HTTP_PROXY
-        || process.env.http_proxy
-        || process.env.ALL_PROXY;
+    const url =
+        proxyUrl ||
+        process.env.HTTPS_PROXY ||
+        process.env.https_proxy ||
+        process.env.HTTP_PROXY ||
+        process.env.http_proxy ||
+        process.env.ALL_PROXY;
     if (!url) return;
     const { ProxyAgent, setGlobalDispatcher, install } = await import("undici");
     const cleanUrl = url.trim();
