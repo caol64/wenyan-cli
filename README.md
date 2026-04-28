@@ -142,11 +142,30 @@ source_url: http://
 
 ## 发布图片消息（小绿书）
 
-发布图片消息与发布图文消息唯一的区别在于`frontmatter`的一个参数`image_list`：
+发布图片消息与发布图文消息的区别在于 frontmatter 中需要指定图片列表。支持两种方式：
+
+### 方式一：使用 type: image（推荐）
+
+在 frontmatter 中设置 `type: image`，CLI 会自动从正文中提取所有图片：
 
 ```md
 ---
-title: 人勤春来早, 读书正当时
+title: 人勤春来早，读书正当时
+type: image
+---
+
+![](./1.jpeg)
+![](./2.jpeg)
+![](./3.jpeg)
+```
+
+### 方式二：手动指定 image_list
+
+直接在 frontmatter 中列出图片路径：
+
+```md
+---
+title: 人勤春来早，读书正当时
 image_list:
   - ./1.jpeg
   - ./2.jpeg
@@ -156,7 +175,7 @@ image_list:
 ---
 ```
 
-`image_list`最多20张，首张即为封面，
+`image_list` 最多 20 张，首张即为封面。
 
 ## Server 模式
 

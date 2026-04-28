@@ -19,18 +19,24 @@ sequenceDiagram
 
     Note over Client: 用户/自动化程序触发发布指令
     Client->>Client: 解析 Markdown/提取图片/读取元数据
-    Client->>Server: POST /publish<br/>携带：Markdown 内容 + 图片文件 + 元数据 + API Key
+    Client->>Server: POST /upload (上传图片)
+    Server-->>Client: 返回 fileId (asset://)
+    Client->>Server: POST /upload (上传渲染后的 JSON)
+    Server-->>Client: 返回 fileId
+    Client->>Server: POST /publish (触发发布)
     Note over Server: 1. 验证 API Key 合法性
     Note over Server: 2. 处理图片资源（上传至微信素材库）
     Server->>Wechat: POST /media/upload (上传图片)
     Wechat-->>Server: 返回 media_id + 图片永久 URL
-    Note over Server: 3. 替换 Markdown 图片链接/渲染为微信兼容 HTML
+    Note over Server: 3. 替换图片链接/渲染 HTML
     Server->>Wechat: POST /draft/add (创建公众号草稿)
     Wechat-->>Server: 返回 draft_id (草稿箱 ID)
     Server-->>Client: 返回发布结果（success + draft_id / error 详情）
 ```
 
 文颜 Server 部署后暴露标准 HTTP 接口，支持 Wenyan CLI、Wenyan MCP 等客户端调用，适配自动化发布、批量发文、AI 生成后直接发布等场景。
+
+Server 同时支持 **图文文章** 和 **图片消息（小绿书）** 两种发布类型，客户端无需区分，Server 会根据内容自动路由。
 
 ## 快速部署
 
@@ -121,6 +127,25 @@ curl -X POST http://localhost:3000/publish \
     "macStyle": true
   }'
 ```
+
+### 小绿书（图片消息）Server 模式说明
+
+Server 模式完全支持图片消息（小绿书）发布。发布流程如下：
+
+**客户端处理：**
+
+1. 读取 Markdown 并解析 frontmatter
+2. 如果设置 `type: image`，自动从正文提取图片路径
+3. 将 `image_list` 中的本地图片通过 `/upload` 接口上传到 Server，路径替换为 `asset://fileId`
+4. 将渲染后的内容（JSON 格式）通过 `/upload` 接口上传
+
+**服务端处理：**
+
+1. 读取 JSON 内容，检测是否包含 `image_list`
+2. 替换 `image_list` 中的 `asset://` 路径为服务器本地路径
+3. 调用 `publishImageTextToWechatDraft` 发布图片消息到草稿箱
+
+客户端无需手动区分发布类型，CLI 会根据 `image_list` 是否存在自动选择发布路径。
 
 ## API 接口认证
 
