@@ -4,17 +4,23 @@
 
 CLI 会自动处理图片上传、HTML 渲染和草稿创建，无需手动操作微信公众号后台。
 
+支持两种文章类型：
+
+- **图文文章**：以文字为主体的常规公众号文章
+- **图片消息（小绿书）**：以图片为主体的图集内容，在公众号中显示为小绿书样式
+
 ## 工作流程
 
 执行 `wenyan publish` 时，CLI 自动完成以下步骤：
 
 1. 读取 Markdown 内容（文件 / stdin / 直接输入）
 2. 解析 frontmatter（标题、封面等元数据）
-3. 自动检测正文和封面中的图片
-4. 上传图片到微信公众号素材库
-5. 将 Markdown 渲染为微信公众号兼容 HTML
-6. 创建公众号草稿
-7. 返回发布结果
+3. 如果设置 `type: image`，自动从正文提取图片路径
+4. 自动检测正文和封面中的图片
+5. 上传图片到微信公众号素材库
+6. 将 Markdown 渲染为微信公众号兼容 HTML（图文文章）/ 直接使用原始内容（小绿书）
+7. 创建公众号草稿
+8. 返回发布结果
 
 ## 内容输入方式
 
@@ -88,11 +94,63 @@ source_url: https://example.com
 | cover      | ❌  | 封面图片（本地路径或网络 URL） |
 | author     | ❌  | 作者                |
 | source_url | ❌  | 原文链接              |
+| type       | ❌  | 文章类型，设为 `image` 表示图片消息（小绿书） |
+| image_list | ❌  | 图片路径列表（小绿书专用，最多 20 张） |
 
 说明：
 
 * 如果未指定 cover，将自动使用正文第一张图片作为封面
 * cover 支持本地路径和网络 URL
+* `type` 和 `image_list` 用于图片消息发布，详见下方
+
+## 发布图片消息（小绿书）
+
+图片消息以图片为主体，适合发布图集类内容。支持两种方式：
+
+### 方式一：使用 type: image（推荐）
+
+在 frontmatter 中设置 `type: image`，CLI 会自动从正文中提取所有图片：
+
+```md
+---
+title: 人勤春来早，读书正当时
+type: image
+---
+
+![](./1.jpeg)
+![](./2.jpeg)
+![](./3.jpeg)
+![](./4.jpeg)
+![](./5.jpeg)
+```
+
+CLI 会自动：
+1. 提取正文中所有图片路径
+2. 将路径注入 `image_list`
+3. 从正文中移除图片引用
+
+### 方式二：手动指定 image_list
+
+直接在 frontmatter 中列出图片路径：
+
+```md
+---
+title: 人勤春来早，读书正当时
+image_list:
+  - ./1.jpeg
+  - ./2.jpeg
+  - ./3.jpeg
+  - ./4.jpeg
+  - ./5.jpeg
+---
+```
+
+### 说明
+
+* `image_list` 最多 20 张图片
+* 第一张图片自动作为封面（也可通过 `cover` 字段指定）
+* 图片消息不会应用主题样式，保持图片为主体
+* 支持本地路径和网络 URL
 
 ## 图片处理机制
 
@@ -138,6 +196,8 @@ wenyan publish \
 2. 上传到 Wenyan Server
 3. Server 调用微信公众号 API
 4. 返回发布结果
+
+Server 模式同样支持小绿书发布。CLI 会自动检测 `image_list`，将图片上传到 Server 并路由到图片消息发布接口。
 
 适用于：
 
@@ -234,6 +294,25 @@ wenyan publish \
   -f article.md \
   --no-mac-style \
   --no-footnote
+```
+
+### 发布图片消息（小绿书）
+
+```bash
+wenyan publish -f photos.md
+```
+
+其中 `photos.md` 内容：
+
+```md
+---
+title: 人勤春来早，读书正当时
+type: image
+---
+
+![](./1.jpeg)
+![](./2.jpeg)
+![](./3.jpeg)
 ```
 
 ### 使用远程 Server
