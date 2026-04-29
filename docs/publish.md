@@ -96,6 +96,8 @@ source_url: https://example.com
 | source_url | ❌  | 原文链接              |
 | type       | ❌  | 文章类型，设为 `image` 表示图片消息（小绿书） |
 | image_list | ❌  | 图片路径列表（小绿书专用，最多 20 张） |
+| need_open_comment | ❌  | 是否打开评论 |
+| only_fans_can_comment | ❌  | 是否仅粉丝可评论 |
 
 说明：
 
