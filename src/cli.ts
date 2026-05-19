@@ -20,6 +20,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
+import select from "@inquirer/select";
+import fs from "node:fs/promises";
 import { loadEnvFile } from "node:process";
 
 interface CLIPublishOptions extends ClientPublishOptions {
@@ -233,7 +235,244 @@ export function createProgram(version: string = pkg.version): Command {
             });
         });
 
+    program
+        .command("draft")
+        .description("Manage wechat MP drafts (list / append / replace / update)")
+        .option("-l, --list", "List all drafts")
+        .option("-u, --update <mediaId>", "Update a draft directly (with --file or --title)")
+        .option("-f, --file <path>", "Markdown file path (full replace)")
+        .option("-t, --title <title>", "New title for the draft")
+        .option("-a, --append <text>", "Append text to the end of draft content")
+        .option("-s, --search <text>", "Text to search for (for --replace)")
+        .option("-r, --replace <text>", "Text to replace the searched text with")
+        .option("-c, --cover <path>", "Cover image path")
+        .option("-i, --interactive", "Interactive mode: select draft and edit options")
+        .option("--app-id <appId>", "AppID for the WeChat MP platform")
+        .option("--index <index>", "Article index to update (default: 0)", "0")
+        .action(async (options: Record<string, any>) => {
+            await runCommandWrapper(async () => {
+                // 获取凭据
+                const appId = options.appId;
+                const credData = await (async () => {
+                    const { safeReadJson } = await import("@wenyan-md/core/wrapper");
+                    return await safeReadJson(path.join(configDir, "credential.json"), {});
+                })();
+                const firstAppId = Object.keys(credData.wechat || {})[0];
+                const credential = await credentialStore.getWechatCredential(appId || firstAppId);
+                if (!credential) {
+                    console.error("请先配置公众号凭据: wenyan credential -s");
+                    process.exit(1);
+                }
+                let appIdFinal = credential.appId;
+                let appSecretFinal = credential.appSecret;
+                if (!appSecretFinal && process.env.WECHAT_APP_SECRET) {
+                    appSecretFinal = process.env.WECHAT_APP_SECRET;
+                }
+                const accessToken = await wechatPublisher.getAccessTokenWithCache(appIdFinal, appSecretFinal);
+
+                // ─── 交互模式 ───
+                if (options.interactive || (!options.list && !options.update && !options.append && !options.search && !options.replace)) {
+                    console.log("正在获取草稿列表...");
+                    const result = await wechatPublisher.listDrafts(accessToken, 0, 20, 0);
+                    if (!result.item || result.item.length === 0) {
+                        console.log("暂无草稿");
+                        return;
+                    }
+                    const choices = result.item.map((item: any) => {
+                        const title = item.content.news_item?.[0]?.title || "(无标题)";
+                        return { name: `${title} (${item.media_id.slice(0, 20)}...)`, value: item.media_id };
+                    });
+                    const mediaId = await select({ message: "选择要编辑的草稿:", choices });
+                    const articleIndex = parseInt(options.index, 10) || 0;
+                    console.log("正在获取草稿内容...");
+                    const draftData = await wechatPublisher.getDraft(accessToken, mediaId);
+                    const newsItem = draftData.news_item?.[articleIndex];
+                    if (!newsItem) { console.error("未找到文章"); process.exit(1); }
+                    const updateData = { ...newsItem };
+                    const actionChoice = await select({
+                        message: "选择操作:",
+                        choices: [
+                            { name: "修改标题", value: "title" },
+                            { name: "追加内容到末尾", value: "append" },
+                            { name: "搜索替换指定文字", value: "replace" },
+                            { name: "用Markdown文件替换全文", value: "file" },
+                        ]
+                    });
+                    if (actionChoice === "title") {
+                        updateData.title = await input({ message: "新标题:", default: updateData.title });
+                    } else if (actionChoice === "append") {
+                        const appendText = await input({ message: "要追加的内容 (纯文本):" });
+                        let htmlSnippet = appendText.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        if (!/^<p>/i.test(htmlSnippet)) htmlSnippet = '<p>' + htmlSnippet + '</p>';
+                        updateData.content = (updateData.content || '') + htmlSnippet;
+                        console.log("  已追加内容");
+                    } else if (actionChoice === "replace") {
+                        const searchText = await input({ message: "要查找的文字:" });
+                        const replaceText = await input({ message: "替换为:" });
+                        const content = updateData.content || '';
+                        const count = (content.match(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+                        if (!content.includes(searchText)) {
+                            console.error(`未找到"${searchText}"`);
+                            process.exit(1);
+                        }
+                        updateData.content = content.split(searchText).join(replaceText);
+                        console.log(`  已替换 ${count} 处`);
+                    } else if (actionChoice === "file") {
+                        options.file = await input({ message: "Markdown文件路径:" });
+                        await applyFileUpdate(options, updateData, appIdFinal, accessToken);
+                    }
+                    delete updateData.update_time;
+                    delete updateData.is_top;
+                    delete updateData.digest;
+                    delete updateData.url;
+                    delete updateData.need_open_comment;
+                    delete updateData.only_fans_can_comment;
+                    console.log("正在更新草稿...");
+                    await wechatPublisher.updateDraft(accessToken, mediaId, articleIndex, updateData);
+                    console.log(`✅ 草稿更新成功! MediaID: ${mediaId}`);
+                    return;
+                }
+
+                // ─── 列表模式 ───
+                if (options.list) {
+                    console.log("正在获取草稿列表...\n");
+                    const result = await wechatPublisher.listDrafts(accessToken, 0, 20, 0);
+                    if (!result.item || result.item.length === 0) {
+                        console.log("暂无草稿");
+                        return;
+                    }
+                    console.log(`共 ${result.total_count} 篇草稿:\n`);
+                    result.item.forEach((item: any, i: number) => {
+                        const { media_id, content } = item;
+                        const articles = content.news_item || [];
+                        articles.forEach((article: any, j: number) => {
+                            const title = article.title || "(无标题)";
+                            const updateTime = article.update_time ? new Date(article.update_time * 1000).toLocaleString("zh-CN") : "";
+                            const digest = article.digest || "";
+                            console.log(`  [${i * 10 + j + 1}] ${title}`);
+                            console.log(`      MediaID: ${media_id}`);
+                            console.log(`      摘要: ${digest ? digest.slice(0, 60) + "..." : "(无)"}`);
+                            console.log(`      更新时间: ${updateTime}\n`);
+                        });
+                    });
+                    return;
+                }
+
+                // ─── 更新模式 ───
+                if (options.update || options.search || options.append) {
+                    const mediaId = options.update || "";
+                    const articleIndex = parseInt(options.index, 10) || 0;
+                    if (!options.update) {
+                        console.error("需要指定 -u <mediaId> 来定位草稿，或用 -i 交互模式");
+                        process.exit(1);
+                    }
+                    if (!options.file && !options.title && !options.append && !options.search) {
+                        console.error("更新草稿需要至少指定更新内容: --file, --title, --append, 或 --search+--replace");
+                        process.exit(1);
+                    }
+                    console.log("正在获取草稿当前内容...");
+                    const draftData = await wechatPublisher.getDraft(accessToken, mediaId);
+                    const newsItem = draftData.news_item?.[articleIndex];
+                    if (!newsItem) {
+                        console.error(`未找到索引 ${articleIndex} 的文章`);
+                        process.exit(1);
+                    }
+                    const updateData = { ...newsItem };
+                    if (options.title) updateData.title = options.title;
+                    if (options.append) {
+                        let htmlSnippet = options.append.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+                        if (!/^<p>/i.test(htmlSnippet)) htmlSnippet = '<p>' + htmlSnippet + '</p>';
+                        updateData.content = (updateData.content || '') + htmlSnippet;
+                        console.log("  已追加内容");
+                    }
+                    if (options.search) {
+                        const searchText = options.search;
+                        const replaceText = options.replace || '';
+                        const count = (updateData.content.match(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+                        if (!(updateData.content || '').includes(searchText)) {
+                            console.error(`未找到"${searchText}"`);
+                            process.exit(1);
+                        }
+                        updateData.content = updateData.content.split(searchText).join(replaceText);
+                        console.log(`  已替换 ${count} 处`);
+                    }
+                    if (options.file) {
+                        await applyFileUpdate(options, updateData, appIdFinal, accessToken);
+                    }
+                    if (options.cover) {
+                        const coverResp = await wechatPublisher.uploadImage(
+                            new Blob([await fs.readFile(options.cover)], { type: "image/jpeg" }),
+                            "cover.jpg",
+                            accessToken,
+                            appIdFinal
+                        );
+                        updateData.thumb_media_id = coverResp.media_id;
+                    }
+                    delete updateData.update_time;
+                    delete updateData.is_top;
+                    delete updateData.digest;
+                    delete updateData.url;
+                    delete updateData.need_open_comment;
+                    delete updateData.only_fans_can_comment;
+                    console.log("正在更新草稿...");
+                    await wechatPublisher.updateDraft(accessToken, mediaId, articleIndex, updateData);
+                    console.log(`✅ 草稿更新成功! MediaID: ${mediaId}`);
+                    return;
+                }
+                program.commands.find((c) => c.name() === "draft")?.outputHelp();
+            });
+        });
+
     return program;
+}
+
+// ─── 文件替换辅助函数 ───
+async function applyFileUpdate(options: Record<string, any>, updateData: any, appIdFinal: string, accessToken: string) {
+    const content = await fs.readFile(options.file, "utf-8");
+    const { handleFrontMatter } = await import("@wenyan-md/core/core");
+    const frontMatterResult: any = handleFrontMatter ? handleFrontMatter(content) : { content, title: updateData.title };
+    if (frontMatterResult.title) updateData.title = frontMatterResult.title;
+    const { renderWithTheme } = await import("@wenyan-md/core/wrapper");
+    const styledHtml = await renderWithTheme(frontMatterResult.content, {
+        theme: options.theme || "default",
+        highlight: options.highlight || "solarized-light",
+        macStyle: true,
+        footnote: true,
+    });
+    const { JSDOM } = await import("jsdom");
+    const dom = new JSDOM("<body>" + styledHtml + "</body>");
+    const doc = dom.window.document;
+    const images = Array.from(doc.querySelectorAll("img"));
+    let firstId = "";
+    for (const img of images) {
+        const src = img.getAttribute("src");
+        if (src && !src.startsWith("https://mmbiz.qpic.cn")) {
+            try {
+                const resp = await wechatPublisher.uploadImage(
+                    new Blob([await (await fetch(src)).arrayBuffer()], { type: "image/jpeg" }),
+                    "img.jpg",
+                    accessToken,
+                    appIdFinal
+                );
+                img.setAttribute("src", resp.url);
+                if (!firstId) firstId = resp.media_id;
+            } catch (e: any) {
+                console.error(`  跳过图片上传: ${e.message}`);
+            }
+        }
+    }
+    updateData.content = doc.body.innerHTML;
+    if (options.cover) {
+        const coverResp = await wechatPublisher.uploadImage(
+            new Blob([await fs.readFile(options.cover)], { type: "image/jpeg" }),
+            "cover.jpg",
+            accessToken,
+            appIdFinal
+        );
+        updateData.thumb_media_id = coverResp.media_id;
+    } else if (firstId && !updateData.thumb_media_id) {
+        updateData.thumb_media_id = firstId;
+    }
 }
 
 // --- 统一的错误处理包装器 ---

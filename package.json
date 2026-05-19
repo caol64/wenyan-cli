@@ -56,7 +56,8 @@
     "formdata-node": "^6.0.3",
     "jsdom": "^27.4.0",
     "multer": "^2.1.0",
-    "undici": "^8.0.2"
+    "undici": "^8.0.2",
+    "@inquirer/select": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
