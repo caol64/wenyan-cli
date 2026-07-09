@@ -218,7 +218,7 @@ describe("serve.ts", () => {
     });
 
     describe("Publish Endpoint", () => {
-        it("should forward comment options from uploaded json to publishToWechatDraft", async () => {
+        it("should forward comment and crop options from uploaded json to publishToWechatDraft", async () => {
             mock.method(console, "log", mock.fn());
 
             const previousAppId = process.env.WECHAT_APP_ID;
@@ -272,6 +272,8 @@ describe("serve.ts", () => {
                     content: `<p>测试内容</p><img src="asset://${imageFileId}" />`,
                     author: "测试作者",
                     source_url: "https://example.com",
+                    pic_crop_235_1: "0_0_1_1",
+                    pic_crop_1_1: "0_0_0.425532_1",
                     need_open_comment: 1,
                     only_fans_can_comment: 1,
                 });
@@ -306,6 +308,8 @@ describe("serve.ts", () => {
 
                 const publishOptions = publishDraftMock.mock.calls[0].arguments[1];
                 assert.ok(publishOptions);
+                assert.equal(publishOptions.pic_crop_235_1, "0_0_1_1");
+                assert.equal(publishOptions.pic_crop_1_1, "0_0_0.425532_1");
                 assert.equal(publishOptions.need_open_comment, 1);
                 assert.equal(publishOptions.only_fans_can_comment, 1);
             } finally {
