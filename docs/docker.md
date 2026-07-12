@@ -172,12 +172,18 @@ version: "3"
 services:
   wenyan-server:
     image: caol64/wenyan-cli
-    command: server
+    command: ["serve", "--api-key-file", "/run/secrets/wenyan-api-key"]
     ports:
       - "3000:3000"
     env_file:
       - .env
+    secrets:
+      - wenyan-api-key
     restart: unless-stopped
+
+secrets:
+  wenyan-api-key:
+    file: ./wenyan-api-key
 ```
 
 启动：
