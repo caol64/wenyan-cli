@@ -84,14 +84,19 @@ Server 模式适合：
 ### 启动 Server
 
 ```bash
+# 先创建仅宿主机用户可读的密钥文件
+printf '%s' 'replace-with-a-strong-api-key' > wenyan-api-key
+chmod 600 wenyan-api-key
+
 docker run -d \
   --rm \
   --name wenyan-server \
   -p 3000:3000 \
   --env-file .env.test \
+  -v "$PWD/wenyan-api-key:/run/secrets/wenyan-api-key:ro" \
   caol64/wenyan-cli \
   serve \
-  --api-key testtest
+  --api-key-file /run/secrets/wenyan-api-key
 ```
 
 ### Server 环境变量示例
@@ -102,8 +107,6 @@ docker run -d \
 WECHAT_APP_ID=xxxx
 WECHAT_APP_SECRET=xxxx
 WECHAT_REFRESH_TOKEN=xxxx
-
-WENYAN_API_KEY=your-api-key
 PORT=3000
 ```
 

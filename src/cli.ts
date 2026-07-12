@@ -143,8 +143,9 @@ export function createProgram(version: string = pkg.version): Command {
         .description("Start a server to provide HTTP API for rendering and publishing")
         .option("-p, --port <port>", "Port to listen on (default: 3000)", "3000")
         .option("--api-key <apiKey>", "API key for authentication")
+        .option("--api-key-file <path>", "Read the API key for authentication from a file")
         .option("--env-file <file>", "Path to a .env file to load environment variables from")
-        .action(async (options: { port?: string; apiKey?: string; envFile?: string }) => {
+        .action(async (options: { port?: string; apiKey?: string; apiKeyFile?: string; envFile?: string }) => {
             try {
                 // 读取环境变量文件（如果提供了 --env-file 选项）
                 if (options.envFile) {
@@ -152,7 +153,7 @@ export function createProgram(version: string = pkg.version): Command {
                 }
                 const { serveCommand } = await import("./commands/serve.js");
                 const port = options.port ? parseInt(options.port, 10) : 3000;
-                await serveCommand({ port, version, apiKey: options.apiKey });
+                await serveCommand({ port, version, apiKey: options.apiKey, apiKeyFile: options.apiKeyFile });
             } catch (error: any) {
                 console.error(error.message);
                 process.exit(1);

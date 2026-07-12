@@ -1,6 +1,7 @@
 import { describe, it, mock, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { serveCommand, UPLOAD_DIR } from "../src/commands/serve.js";
 
@@ -135,6 +136,58 @@ describe("serve.ts", () => {
 
             assert.equal(statusCode, 200);
             assert.equal(body.success, true);
+        });
+
+        it("should read the API key from a file", async () => {
+            mock.method(console, "log", mock.fn());
+            const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "wenyan-api-key-"));
+            const apiKeyFile = path.join(tempDir, "api-key");
+
+            try {
+                await fs.writeFile(apiKeyFile, `  ${testApiKey}\n`, { mode: 0o600 });
+                serverProcess = serveCommand({ port: testPort, apiKeyFile });
+                baseUrl = `http://localhost:${testPort}`;
+
+                await new Promise((resolve) => setTimeout(resolve, 200));
+
+                const unauthorized = await makeRequest("GET", "/verify");
+                assert.equal(unauthorized.statusCode, 401);
+
+                const authorized = await makeRequest("GET", "/verify", {
+                    headers: { "x-api-key": testApiKey },
+                });
+                assert.equal(authorized.statusCode, 200);
+                assert.equal(authorized.body.success, true);
+            } finally {
+                await fs.rm(tempDir, { recursive: true, force: true });
+            }
+        });
+
+        it("should reject an unreadable API key file before starting", async () => {
+            const apiKeyFile = path.join(os.tmpdir(), `missing-wenyan-api-key-${crypto.randomUUID()}`);
+            serverProcess = serveCommand({ port: testPort, apiKeyFile });
+
+            await assert.rejects(serverProcess, /无法读取 API Key 文件/);
+        });
+
+        it("should reject an empty API key file before starting", async () => {
+            const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "wenyan-empty-api-key-"));
+            const apiKeyFile = path.join(tempDir, "api-key");
+
+            try {
+                await fs.writeFile(apiKeyFile, " \n\t", { mode: 0o600 });
+                serverProcess = serveCommand({ port: testPort, apiKeyFile });
+
+                await assert.rejects(serverProcess, /API Key 文件 .+ 为空/);
+            } finally {
+                await fs.rm(tempDir, { recursive: true, force: true });
+            }
+        });
+
+        it("should reject using --api-key and --api-key-file together", async () => {
+            serverProcess = serveCommand({ port: testPort, apiKey: testApiKey, apiKeyFile: "/run/secrets/api-key" });
+
+            await assert.rejects(serverProcess, /--api-key 和 --api-key-file 不能同时使用/);
         });
     });
 
