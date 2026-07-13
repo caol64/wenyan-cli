@@ -23,6 +23,12 @@ jobs:
           username: caol64
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Get version from package.json
+        id: package_version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Extract metadata (tags, labels)
         id: meta
         uses: docker/metadata-action@v5
@@ -30,9 +36,7 @@ jobs:
           images: caol64/wenyan-cli
           tags: |
             type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=raw,value=${{ steps.package_version.outputs.version }}
 
       - name: Build and push multi-arch Docker image
         uses: docker/build-push-action@v6
