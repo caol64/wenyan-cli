@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { configDir, publishToWechatDraft, publishImageTextToWechatDraft } from "@wenyan-md/core/wrapper";
 import multer from "multer";
 import { WechatPublishResponse } from "@wenyan-md/core/wechat";
+import { resolveApiKey } from "../api-key.js";
 
 export interface ServeOptions {
     port?: number;
@@ -250,31 +251,6 @@ export async function serveCommand(options: ServeOptions) {
             server.close(() => resolve());
         });
     });
-}
-
-async function resolveApiKey(options: ServeOptions): Promise<string | undefined> {
-    if (options.apiKey !== undefined && options.apiKeyFile !== undefined) {
-        throw new Error("--api-key 和 --api-key-file 不能同时使用");
-    }
-
-    if (options.apiKeyFile === undefined) {
-        return options.apiKey;
-    }
-
-    let apiKey: string;
-    try {
-        apiKey = await fs.readFile(options.apiKeyFile, "utf8");
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`无法读取 API Key 文件 '${options.apiKeyFile}': ${message}`, { cause: error });
-    }
-
-    apiKey = apiKey.trim();
-    if (!apiKey) {
-        throw new Error(`API Key 文件 '${options.apiKeyFile}' 为空`);
-    }
-
-    return apiKey;
 }
 
 /**

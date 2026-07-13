@@ -21,8 +21,10 @@ import { fileURLToPath } from "node:url";
 import input from "@inquirer/input";
 import password from "@inquirer/password";
 import { loadEnvFile } from "node:process";
+import { resolveApiKey } from "./api-key.js";
 
 interface CLIPublishOptions extends ClientPublishOptions {
+    apiKeyFile?: string;
     proxy?: string;
     envFile?: string;
 }
@@ -60,6 +62,7 @@ export function createProgram(version: string = pkg.version): Command {
         .option("--app-id <appId>", "AppID for the WeChat MP platform")
         .option("--server <url>", "Server URL to publish through (e.g. https://api.yourdomain.com)")
         .option("--api-key <apiKey>", "API key for the remote server")
+        .option("--api-key-file <path>", "Read the remote server API key from a file")
         .option("--env-file <file>", "Path to a .env file to load environment variables from")
         .option("--proxy <url>", "Proxy URL to use for requests, ex: http://127.0.0.1:1080")
         .action(async (inputContent: string | undefined, options: CLIPublishOptions) => {
@@ -74,6 +77,8 @@ export function createProgram(version: string = pkg.version): Command {
 
                 // 如果传入了 --server，则走客户端（远程）模式
                 if (options.server) {
+                    options.apiKey = await resolveApiKey(options);
+                    delete options.apiKeyFile;
                     options.clientVersion = version; // 将 CLI 版本传递给服务器，便于调试和兼容性处理
                     const mediaId = await renderAndPublishToServer(inputContent, options, getInputContent);
                     console.log(`发布成功，Media ID: ${mediaId}`);
