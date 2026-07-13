@@ -130,7 +130,7 @@ curl http://localhost:3000/health
 wenyan publish \
   -f article.md \
   --server http://your-server-ip:3000 \
-  --api-key your-api-key
+  --api-key-file ~/.config/wenyan/server-api-key
 ```
 
 或 Docker CLI：
@@ -139,11 +139,12 @@ wenyan publish \
 docker run --rm \
   -e HOST_FILE_PATH=$(pwd) \
   -v $(pwd):/mnt/host-downloads \
+  -v "$HOME/.config/wenyan/server-api-key:/run/secrets/wenyan-api-key:ro" \
   caol64/wenyan-cli \
   publish \
   -f ./article.md \
   --server http://host.docker.internal:3000 \
-  --api-key your-api-key
+  --api-key-file /run/secrets/wenyan-api-key
 ```
 
 ## Docker Compose（推荐）

@@ -207,7 +207,7 @@ flowchart LR
 客户端调用 Server 发布：
 
 ```bash
-wenyan publish -f article.md --server https://api.example.com --api-key your-api-key
+wenyan publish -f article.md --server https://api.example.com --api-key-file ~/.config/wenyan/server-api-key
 ```
 
 ## 多公众号发布（进阶）

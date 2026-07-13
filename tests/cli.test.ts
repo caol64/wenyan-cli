@@ -48,6 +48,12 @@ describe("CLI Argument Parsing", () => {
         assert.ok(serveCommand?.options.some((option) => option.long === "--api-key-file"));
     });
 
+    it("should expose the publish API key file option", () => {
+        const publishCommand = program.commands.find((cmd) => cmd.name() === "publish");
+
+        assert.ok(publishCommand?.options.some((option) => option.long === "--api-key-file"));
+    });
+
     it("should have credential command", () => {
         const commands = program.commands.map((cmd) => cmd.name());
         assert.ok(commands.includes("credential"));
