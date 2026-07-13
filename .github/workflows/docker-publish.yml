@@ -1,15 +1,84 @@
 name: Build and Publish Docker image
 
 on:
+  workflow_run:
+    workflows: ["Build and Publish to npm"]
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "要发布的 @wenyan-md/cli 精确版本，例如 2.0.10"
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 jobs:
   build-and-push:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
 
     steps:
+      - name: Resolve release version
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+          WORKFLOW_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            version="$INPUT_VERSION"
+            expected_sha=""
+          else
+            version="${WORKFLOW_HEAD_BRANCH#v}"
+            expected_sha="$WORKFLOW_HEAD_SHA"
+          fi
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unsupported release version: $version" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "expected-sha=$expected_sha" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Verify release version
+        id: verify
+        env:
+          EXPECTED_SHA: ${{ steps.release.outputs.expected-sha }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          release_sha="$(git rev-list -n 1 "$tag")"
+          package_version="$(git show "$tag:package.json" | node -e 'let data = ""; process.stdin.on("data", chunk => data += chunk).on("end", () => console.log(JSON.parse(data).version))')"
+
+          if [[ "$package_version" != "$VERSION" ]]; then
+            echo "$tag contains package version $package_version" >&2
+            exit 1
+          fi
+
+          if [[ -n "$EXPECTED_SHA" && "$release_sha" != "$EXPECTED_SHA" ]]; then
+            echo "$tag points to $release_sha instead of $EXPECTED_SHA" >&2
+            exit 1
+          fi
+
+          published_version="$(npm view "@wenyan-md/cli@$VERSION" version)"
+          if [[ "$published_version" != "$VERSION" ]]; then
+            echo "@wenyan-md/cli@$VERSION is not available on npm" >&2
+            exit 1
+          fi
+
+          echo "release-sha=$release_sha" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -29,10 +98,8 @@ jobs:
         with:
           images: caol64/wenyan-cli
           tags: |
+            type=raw,value=${{ steps.release.outputs.version }}
             type=raw,value=latest
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
 
       - name: Build and push multi-arch Docker image
         uses: docker/build-push-action@v6
@@ -41,4 +108,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.revision=${{ steps.verify.outputs.release-sha }}
+          build-args: |
+            WENYAN_CLI_VERSION=${{ steps.release.outputs.version }}
